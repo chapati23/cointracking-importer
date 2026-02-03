@@ -61,11 +61,7 @@ export function listImports(): ImportRecord[] {
  * Generate import ID from chain, address prefix, and date.
  * Format: chain_addressPrefix_yearMonth
  */
-export function generateImportId(
-  chain: string,
-  address: string,
-  dateStr?: string
-): string {
+export function generateImportId(chain: string, address: string, dateStr?: string): string {
   const chainLower = chain.toLowerCase();
   const addressPrefix = address.slice(0, 10).toLowerCase();
   const date = dateStr ?? new Date().toISOString().slice(0, 7); // YYYY-MM

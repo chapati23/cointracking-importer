@@ -8,8 +8,8 @@ import type { CsvType, DetectedFile, ImportManifest } from "./types.js";
 
 // ---------- Constants ----------
 
-const LOCAL_DIR = ".local";
-const IMPORTS_DIR = path.join(LOCAL_DIR, "imports");
+const DATA_DIR = "data";
+const IMPORTS_DIR = path.join(DATA_DIR, "imports");
 
 // ---------- Address Path Formatting ----------
 
@@ -124,17 +124,19 @@ export function generateManifest(opts: {
  * Create a unique folder name for the date range.
  * If folder exists, appends timestamp.
  */
-function getUniqueDateRangeFolder(basePath: string, dateRange: { from: string; to: string }): string {
-  const folderName = dateRange.from === dateRange.to 
-    ? dateRange.from 
-    : `${dateRange.from}_${dateRange.to}`;
-  
+function getUniqueDateRangeFolder(
+  basePath: string,
+  dateRange: { from: string; to: string }
+): string {
+  const folderName =
+    dateRange.from === dateRange.to ? dateRange.from : `${dateRange.from}_${dateRange.to}`;
+
   const fullPath = path.join(basePath, folderName);
-  
+
   if (!fs.existsSync(fullPath)) {
     return fullPath;
   }
-  
+
   // Add timestamp suffix for duplicate
   const timestamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
   return path.join(basePath, `${folderName}_${timestamp}`);
@@ -162,9 +164,9 @@ export interface SaveImportResult {
 
 /**
  * Save import files to organized folder structure.
- * 
+ *
  * Structure:
- * .local/imports/<chain>/<name>_<address-short>/<date-range>/
+ * data/imports/<chain>/<name>_<address-short>/<date-range>/
  *   input/
  *     native.csv
  *     tokens.csv
@@ -181,32 +183,32 @@ export function saveImport(opts: SaveImportOptions): SaveImportResult {
   const chainFolder = opts.chain.toLowerCase();
   const addressFolder = formatAddressPath(opts.address);
   const basePath = path.join(IMPORTS_DIR, chainFolder, addressFolder);
-  
+
   // Ensure base path exists
   fs.mkdirSync(basePath, { recursive: true });
-  
+
   // Get unique date range folder
   const importPath = getUniqueDateRangeFolder(basePath, dateRange);
   const inputPath = path.join(importPath, "input");
   const outputDir = path.join(importPath, "output");
-  
+
   // Create directories
   fs.mkdirSync(inputPath, { recursive: true });
   fs.mkdirSync(outputDir, { recursive: true });
-  
+
   // Copy input files
   for (const file of opts.inputFiles) {
     if (file.type === "unknown") continue;
-    
+
     const destFilename = getCsvFilename(file.type);
     const destPath = path.join(inputPath, destFilename);
     fs.copyFileSync(file.path, destPath);
   }
-  
+
   // Copy output file
   const outputDest = path.join(outputDir, "cointracking.csv");
   fs.copyFileSync(opts.outputPath, outputDest);
-  
+
   // Generate and write manifest
   const manifest = generateManifest({
     chain: opts.chain,
@@ -215,9 +217,9 @@ export function saveImport(opts: SaveImportOptions): SaveImportResult {
     files: opts.inputFiles,
     outputRowCount: opts.outputRowCount,
   });
-  
+
   const manifestPath = path.join(importPath, "manifest.json");
   fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2), "utf8");
-  
+
   return { importPath, manifest };
 }

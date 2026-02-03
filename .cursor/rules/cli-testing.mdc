@@ -1,0 +1,54 @@
+---
+description: How to run and test the Cointracking EVM Importer CLI
+alwaysApply: true
+---
+
+# CLI Testing Guide
+
+## Quick Reference
+
+```bash
+# Interactive mode (prompts for everything)
+npm run start # or `npm run convert` without any params
+
+
+# Convert with explicit files (non-interactive)
+npm run convert -- \
+  --address 0x2e17bc5bc5fa3e6691a0965e240f12fdccd0d1b1 \
+  --chain Mantle \
+  --nativeSymbol MNT \
+  --native test/fixtures/mantle/native.csv \
+  --tokens test/fixtures/mantle/tokens.csv \
+  --output /tmp/test-output.csv \
+  --verbose
+
+# Auto-detect files from a directory
+npm run convert data/raw/<import-id>
+
+# Dry run (preview without writing)
+npm run convert -- --native test/fixtures/mantle/native.csv --dry-run --verbose
+```
+
+## Test Fixtures
+
+Available in `test/fixtures/mantle/`:
+- `native.csv` - Native transactions
+- `tokens.csv` - Token transfers
+
+## Common Mistakes to Avoid
+
+| Wrong | Correct |
+|-------|---------|
+| `npm run convert --native x.csv` | `npm run convert -- --native x.csv` (need `--` before flags) |
+| `--address 0x123` | `--address 0x2e17bc5bc5fa3e6691a0965e240f12fdccd0d1b1` (must be 42 chars) |
+| `--native ./test/` | `--native ./test/fixtures/mantle/native.csv` (must be a file, not directory) |
+| Missing `--address` | Without `--address`, CLI prompts interactively (will hang in non-TTY) |
+
+## Required vs Optional Flags
+
+For non-interactive testing, you need:
+1. `--address` - Required (42-char 0x address)
+2. At least one input file (`--native`, `--tokens`, `--internal`, `--nft721`, `--nft1155`)
+3. `--chain` and `--nativeSymbol` - Optional, defaults prompt interactively
+
+For fully non-interactive: provide `--address`, `--chain`, and `--nativeSymbol`.

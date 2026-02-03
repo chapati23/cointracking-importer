@@ -1,11 +1,11 @@
 import { getFieldByKey, normalizeNumber } from "../field-mapping.js";
 import type {
-    CoinTrackingRow,
-    ConvertConfig,
-    CsvRow,
-    ParsedNativeTx,
-    ParsedNftTransfer,
-    TxHash,
+  CoinTrackingRow,
+  ConvertConfig,
+  CsvRow,
+  ParsedNativeTx,
+  ParsedNftTransfer,
+  TxHash,
 } from "../types.js";
 import { isZeroAddress, toAddress, toTxHash } from "../types.js";
 

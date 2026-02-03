@@ -1,11 +1,5 @@
 import { getFieldByKey, normalizeNumber } from "../field-mapping.js";
-import type {
-    CoinTrackingRow,
-    ConvertConfig,
-    CsvRow,
-    ParsedNativeTx,
-    TxHash,
-} from "../types.js";
+import type { CoinTrackingRow, ConvertConfig, CsvRow, ParsedNativeTx, TxHash } from "../types.js";
 import { toAddress, toTxHash } from "../types.js";
 
 // ---------- Parsing ----------
@@ -42,15 +36,8 @@ export function indexNativeByHash(txs: ParsedNativeTx[]): Map<TxHash, ParsedNati
 // ---------- Transformation ----------
 
 export function shouldSkipNativeTx(tx: ParsedNativeTx): boolean {
-  const method = tx.method.toLowerCase();
-
-  // Skip approve transactions with no value movement
-  if (method.includes("approve") && tx.valueIn === 0 && tx.valueOut === 0) {
-    return true;
-  }
-
-  // Skip if no value in or out
-  if (tx.valueIn === 0 && tx.valueOut === 0) {
+  // Skip if no value movement AND no fee (truly empty transaction)
+  if (tx.valueIn === 0 && tx.valueOut === 0 && tx.fee === 0) {
     return true;
   }
 
@@ -103,6 +90,25 @@ export function transformNativeTx(
       SellCurrency: config.nativeSymbol,
       Fee: feeStr,
       FeeCurrency: feeCurrency,
+      Exchange: config.exchange,
+      TradeGroup: "",
+      Comment: comment,
+      Date: tx.dateTime,
+    };
+  }
+
+  // Fee-only transaction (no value movement but has gas cost)
+  // For "Other Fee" type, CoinTracking expects the fee in Sell columns, not Fee columns
+  if (tx.valueIn === 0 && tx.valueOut === 0 && tx.fee > 0) {
+    const comment = tx.method ? `${tx.method} ${tx.txHash}` : `Fee ${tx.txHash}`;
+    return {
+      Type: "Other Fee",
+      BuyAmount: "",
+      BuyCurrency: "",
+      SellAmount: String(tx.fee),
+      SellCurrency: config.nativeSymbol,
+      Fee: "",
+      FeeCurrency: "",
       Exchange: config.exchange,
       TradeGroup: "",
       Comment: comment,

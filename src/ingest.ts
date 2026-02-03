@@ -86,7 +86,8 @@ export async function ingestFiles(filePaths: string[]): Promise<IngestResult | n
       name: "address",
       message: "Wallet address:",
       default: detectedAddress ?? undefined,
-      validate: (v: string) => (v.startsWith("0x") && v.length === 42 ? true : "Enter a valid 0x address"),
+      validate: (v: string) =>
+        v.startsWith("0x") && v.length === 42 ? true : "Enter a valid 0x address",
     },
     {
       type: "input",

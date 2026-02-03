@@ -1,0 +1,12 @@
+{
+  "$schema": "https://unpkg.com/knip@latest/schema.json",
+  "project": ["src/**/*.ts", "test/**/*.ts"],
+  "ignore": [".trunk/**", "test/helpers/**"],
+  "ignoreDependencies": ["prettier"],
+  "ignoreBinaries": ["trunk"],
+  "vitest": true,
+  "rules": {
+    "exports": "warn",
+    "types": "warn"
+  }
+}

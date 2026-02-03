@@ -47,7 +47,10 @@ function matchesPattern(fieldName: string, pattern: FieldPattern): boolean {
  * Find the actual column name in a CSV row that matches any of the given patterns.
  * Returns the matching key name from the row, or undefined if no match.
  */
-export function findMatchingKey(row: CsvRow, patterns: readonly FieldPattern[]): string | undefined {
+export function findMatchingKey(
+  row: CsvRow,
+  patterns: readonly FieldPattern[]
+): string | undefined {
   const keys = Object.keys(row);
   for (const pattern of patterns) {
     const match = keys.find((key) => matchesPattern(key, pattern));

@@ -17,7 +17,7 @@ export function readCsv(filePath: string): CsvRow[] {
     trim: true,
     relax_quotes: true,
     relax_column_count: true,
-  }) as CsvRow[];
+  });
 }
 
 /**
@@ -33,7 +33,7 @@ export function getCsvHeaders(filePath: string): string[] {
     columns: false,
     skip_empty_lines: true,
     trim: true,
-  }) as string[][];
+  });
 
   return parsed[0] ?? [];
 }

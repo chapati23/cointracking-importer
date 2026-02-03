@@ -14,14 +14,14 @@ export interface LocalConfig {
 
 // ---------- Paths ----------
 
-const LOCAL_DIR = ".local";
-const CONFIG_FILE = path.join(LOCAL_DIR, "addresses.json");
+const DATA_DIR = "data";
+const CONFIG_FILE = path.join(DATA_DIR, "addresses.json");
 
 // ---------- Read/Write Config ----------
 
-function ensureLocalDir(): void {
-  if (!fs.existsSync(LOCAL_DIR)) {
-    fs.mkdirSync(LOCAL_DIR, { recursive: true });
+function ensureDataDir(): void {
+  if (!fs.existsSync(DATA_DIR)) {
+    fs.mkdirSync(DATA_DIR, { recursive: true });
   }
 }
 
@@ -46,13 +46,13 @@ export function readLocalConfig(): LocalConfig {
 
     return config as unknown as LocalConfig;
   } catch {
-    console.warn("Warning: Could not parse .local/addresses.json, starting fresh");
+    console.warn("Warning: Could not parse data/addresses.json, starting fresh");
     return { addresses: [] };
   }
 }
 
 export function writeLocalConfig(config: LocalConfig): void {
-  ensureLocalDir();
+  ensureDataDir();
   fs.writeFileSync(CONFIG_FILE, JSON.stringify(config, null, 2), "utf8");
 }
 

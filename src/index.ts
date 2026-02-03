@@ -11,25 +11,33 @@ import { hideBin } from "yargs/helpers";
 import { listCsvFiles, readCsv, writeCoinTrackingCsv } from "./csv-utils.js";
 import { categorizeFiles, detectCsvTypeFromFile, getCsvTypeName } from "./detect.js";
 import {
-    addImportRecord,
-    ensureDataDirs,
-    getOutputFile,
-    listImports,
-    markAsImported,
+  addImportRecord,
+  ensureDataDirs,
+  getOutputFile,
+  listImports,
+  markAsImported,
 } from "./history.js";
 import { saveImport } from "./import-storage.js";
 import { ingestFiles } from "./ingest.js";
 import {
-    formatAddressChoice,
-    getSavedAddresses,
-    saveAddress,
-    type SavedAddress,
+  formatAddressChoice,
+  getSavedAddresses,
+  saveAddress,
+  type SavedAddress,
 } from "./local-config.js";
+import { getDefaultNativeSymbol, resolveNativeSymbol } from "./symbol-overrides.js";
 import { transformInternalRows } from "./transformers/internal.js";
 import { indexNativeByHash, parseNativeRows, transformNativeRows } from "./transformers/native.js";
 import { transformNftRows } from "./transformers/nft.js";
 import { transformTokenRows } from "./transformers/tokens.js";
-import type { CoinTrackingRow, ConvertConfig, CsvType, DetectedFile, InputMode, TxHash } from "./types.js";
+import type {
+  CoinTrackingRow,
+  ConvertConfig,
+  CsvType,
+  DetectedFile,
+  InputMode,
+  TxHash,
+} from "./types.js";
 import { toAddress } from "./types.js";
 
 dayjs.extend(utc);
@@ -382,10 +390,7 @@ async function promptMultipleFiles(startDir: string): Promise<DetectedFile[]> {
 /**
  * Collect files based on input mode and detect their types.
  */
-async function collectAndDetectFiles(
-  mode: InputMode,
-  startDir: string
-): Promise<DetectedFile[]> {
+async function collectAndDetectFiles(mode: InputMode, startDir: string): Promise<DetectedFile[]> {
   const csvFilter = (name: string) => name.endsWith(".csv");
 
   switch (mode) {
@@ -517,6 +522,7 @@ function groupFilesByType(files: DetectedFile[]): Record<Exclude<CsvType, "unkno
 
 interface AddressSelection {
   address: string;
+  name?: string;
 }
 
 async function promptForAddress(): Promise<AddressSelection> {
@@ -559,7 +565,7 @@ async function promptForAddress(): Promise<AddressSelection> {
     },
   ]);
 
-  return { address: selected.address };
+  return { address: selected.address, name: selected.name };
 }
 
 async function promptManualAddress(): Promise<AddressSelection> {
@@ -572,6 +578,15 @@ async function promptManualAddress(): Promise<AddressSelection> {
         v.startsWith("0x") && v.length === 42 ? true : "Enter a valid 0x address",
     },
   ]);
+
+  // Check if this address is already saved
+  const savedAddresses = getSavedAddresses();
+  const existingSaved = savedAddresses.find(
+    (a) => a.address.toLowerCase() === address.toLowerCase()
+  );
+  if (existingSaved) {
+    return { address, name: existingSaved.name };
+  }
 
   // Offer to save the address
   const { shouldSave } = await inquirer.prompt<{ shouldSave: boolean }>([
@@ -595,6 +610,7 @@ async function promptManualAddress(): Promise<AddressSelection> {
 
     saveAddress({ name: addressName.trim(), address });
     console.log(`✓ Saved address as "${addressName.trim()}"`);
+    return { address, name: addressName.trim() };
   }
 
   return { address };
@@ -729,52 +745,81 @@ async function convertCommand(opts: ConvertOptions): Promise<void> {
   // Handle address selection (interactive with saved addresses support)
   if (!opts.address) {
     selectedAddress = await promptForAddress();
+  } else {
+    // CLI address provided - look up name from saved addresses
+    const savedAddresses = getSavedAddresses();
+    const existingSaved = savedAddresses.find(
+      (a) => a.address.toLowerCase() === opts.address?.toLowerCase()
+    );
+    if (existingSaved) {
+      selectedAddress = { address: opts.address, name: existingSaved.name };
+    }
   }
 
-  // Build remaining questions (chain and nativeSymbol)
-  interface Question {
-    type: string;
-    name: string;
-    message: string;
-    default?: string;
-  }
-  const questions: Question[] = [];
+  const addressName = selectedAddress?.name;
 
-  if (!opts.chain) {
-    questions.push({
-      type: "input",
-      name: "chain",
-      message: "Chain name (for CoinTracking Exchange field):",
-      default: "Mantle",
-    });
-  }
-
-  if (!opts.nativeSymbol) {
-    questions.push({
-      type: "input",
-      name: "nativeSymbol",
-      message: "Native token symbol:",
-      default: "MNT",
-    });
+  // Prompt for chain first (needed for native symbol default)
+  let chain: string;
+  if (opts.chain) {
+    chain = opts.chain;
+  } else {
+    const { chainAnswer } = await inquirer.prompt<{ chainAnswer: string }>([
+      {
+        type: "input",
+        name: "chainAnswer",
+        message: "Chain name (for CoinTracking Exchange field):",
+        default: "Mantle",
+      },
+    ]);
+    chain = chainAnswer;
   }
 
-  const answers: Record<string, unknown> =
-    questions.length > 0 ? await inquirer.prompt(questions) : {};
+  // Get native symbol with smart default based on chain
+  let nativeSymbol: string;
+  if (opts.nativeSymbol) {
+    nativeSymbol = opts.nativeSymbol;
+  } else {
+    const suggestedSymbol = getDefaultNativeSymbol(chain);
+    const defaultSymbol = suggestedSymbol ?? "ETH";
+    const symbolHint = suggestedSymbol
+      ? ` (Cointracking uses "${suggestedSymbol}" for ${chain})`
+      : "";
+
+    const { symbolAnswer } = await inquirer.prompt<{ symbolAnswer: string }>([
+      {
+        type: "input",
+        name: "symbolAnswer",
+        message: `Native token symbol${symbolHint}:`,
+        default: defaultSymbol,
+      },
+    ]);
+    nativeSymbol = symbolAnswer;
+  }
+
+  // Resolve to Cointracking-compatible symbol
+  const resolvedNativeSymbol = resolveNativeSymbol(chain, nativeSymbol);
+
+  // Build exchange name: "Chain AddressName" or just "Chain" if no name
+  const exchange = addressName ? `${chain} ${addressName}` : chain;
 
   const address = toAddress((opts.address ?? selectedAddress?.address) as string);
-  const chain = (opts.chain ?? answers["chain"] ?? "EVM") as string;
-  const nativeSymbol = (opts.nativeSymbol ?? answers["nativeSymbol"] ?? "ETH") as string;
 
   const config: ConvertConfig = {
     address,
-    nativeSymbol,
-    exchange: chain,
+    nativeSymbol: resolvedNativeSymbol,
+    exchange,
     cutoff: opts.cutoff ? dayjs.utc(opts.cutoff).toDate() : undefined,
     verbose: opts.verbose,
     dryRun: opts.dryRun,
   };
 
   console.log(`\nProcessing for ${address} on ${chain}...`);
+  if (opts.verbose) {
+    console.log(`  Exchange: ${exchange}`);
+    console.log(
+      `  Native symbol: ${resolvedNativeSymbol}${resolvedNativeSymbol !== nativeSymbol ? ` (resolved from ${nativeSymbol})` : ""}`
+    );
+  }
 
   // Read and parse all CSV files
   const nativeRows = nativeFile ? readCsv(nativeFile) : [];

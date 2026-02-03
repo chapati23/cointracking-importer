@@ -1,13 +1,10 @@
 # Dependencies
 node_modules/
 
-# Local config (private addresses)
-.local/
-
 # Build output
 dist/
 
-# Data folders (contains personal transaction data)
+# Data folder (contains personal addresses and transaction data)
 data/
 
 # Environment
