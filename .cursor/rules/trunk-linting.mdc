@@ -1,0 +1,55 @@
+---
+description: Always use trunk for linting instead of direct tool invocations
+alwaysApply: true
+---
+
+# Prefer Trunk for Linting
+
+Always use `trunk check` for linting instead of invoking linters directly.
+
+## Commands
+
+```bash
+# ✅ GOOD - Use trunk
+trunk check --fix
+trunk check --filter eslint
+trunk check --filter eslint --fix
+
+# ❌ BAD - Don't invoke linters directly
+npx eslint .
+eslint --fix .
+prettier --check .
+```
+
+## Why Trunk?
+
+- Consistent linting configuration across all tools
+- Avoids confirmation prompts when using `--fix`
+- Unified output format
+- Respects project's `.trunk/trunk.yaml` configuration
+
+## trunk check vs trunk fmt
+
+| Command | Purpose |
+|---------|---------|
+| `trunk check --fix` | Run all linters and auto-fix issues (linting + formatting) |
+| `trunk fmt` | Run only formatters (faster, formatting only) |
+
+**When to use `trunk fmt`:**
+- Quick formatting before commits
+- When you only need to fix whitespace/formatting issues
+- Faster than full `trunk check` when you don't need linting
+
+**When to use `trunk check --fix`:**
+- After making code changes that may introduce lint errors
+- Before opening a PR
+- When you need both linting and formatting fixes
+
+## Common Patterns
+
+| Instead of | Use |
+|------------|-----|
+| `npx eslint .` | `trunk check --filter eslint` |
+| `npx eslint --fix .` | `trunk check --filter eslint --fix` |
+| `npx prettier --check .` | `trunk check --filter prettier` |
+| `npx prettier --write .` | `trunk fmt` or `trunk check --filter prettier --fix` |

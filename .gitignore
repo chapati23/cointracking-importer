@@ -1,0 +1,36 @@
+# Dependencies
+node_modules/
+
+# Local config (private addresses)
+.local/
+
+# Build output
+dist/
+
+# Data folders (contains personal transaction data)
+data/
+
+# Environment
+.env
+.env.local
+
+# IDE
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Trunk
+.trunk/*
+!.trunk/trunk.yaml
+!.trunk/configs/
+
+# Test coverage
+coverage/
+
+# Logs
+*.log
+npm-debug.log*
