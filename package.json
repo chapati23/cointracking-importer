@@ -18,7 +18,8 @@
     "test:coverage": "vitest run --coverage",
     "lint": "trunk check --fix",
     "typecheck": "tsc --noEmit",
-    "knip": "knip"
+    "knip": "knip",
+    "clean:test-imports": "rm -rf data/test-imports"
   },
   "dependencies": {
     "csv-parse": "^6.1.0",

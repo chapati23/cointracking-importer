@@ -64,20 +64,21 @@ When you run `npm run start`, you'll be guided through:
 
 ## Options
 
-| Option           | Description                                   |
-| ---------------- | --------------------------------------------- |
-| `--address`      | Your wallet address (0x...)                   |
-| `--chain`        | Chain name for CoinTracking Exchange field    |
-| `--nativeSymbol` | Native token symbol (ETH, MNT, MATIC, etc.)   |
-| `--native`       | Path to native transactions CSV               |
-| `--tokens`       | Path to token transfers CSV                   |
-| `--internal`     | Path to internal transactions CSV             |
-| `--nft721`       | Path to ERC-721 NFT transfers CSV             |
-| `--nft1155`      | Path to ERC-1155 NFT transfers CSV            |
-| `--output`       | Output file path                              |
-| `--cutoff`       | Only include txs after this date (YYYY-MM-DD) |
-| `--dry-run`      | Preview without writing                       |
-| `--verbose`      | Show detailed output                          |
+| Option           | Description                                                 |
+| ---------------- | ----------------------------------------------------------- |
+| `--address`      | Your wallet address (0x...)                                 |
+| `--chain`        | Chain name for CoinTracking Exchange field                  |
+| `--nativeSymbol` | Native token symbol (ETH, MNT, MATIC, etc.)                 |
+| `--native`       | Path to native transactions CSV                             |
+| `--tokens`       | Path to token transfers CSV                                 |
+| `--internal`     | Path to internal transactions CSV                           |
+| `--nft721`       | Path to ERC-721 NFT transfers CSV                           |
+| `--nft1155`      | Path to ERC-1155 NFT transfers CSV                          |
+| `--output`       | Output file path                                            |
+| `--cutoff`       | Only include txs after this date (YYYY-MM-DD)               |
+| `--dry-run`      | Preview without writing                                     |
+| `--verbose`      | Show detailed output                                        |
+| `--test`         | Save to `test-imports/` instead of `imports/` (for testing) |
 
 ## Workflow Example
 
@@ -114,7 +115,7 @@ Any EtherScan-based explorer should work:
 
 ## Import Storage
 
-After each successful import, files are organized in `data/imports/`:
+After each successful import, files are organized in `data/imports/` (or `data/test-imports/` when using `--test`):
 
 ```text
 data/imports/

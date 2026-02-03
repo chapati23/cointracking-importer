@@ -636,6 +636,7 @@ interface ConvertOptions {
   cutoff?: string;
   dryRun?: boolean;
   verbose?: boolean;
+  test?: boolean;
 }
 
 // eslint-disable-next-line sonarjs/cognitive-complexity -- main CLI command with extensive interactive flow
@@ -937,8 +938,10 @@ async function convertCommand(opts: ConvertOptions): Promise<void> {
       inputFiles: detectedFiles,
       outputPath,
       outputRowCount: allRows.length,
+      testMode: opts.test,
     });
-    console.log(`\n✓ Import saved to: ${importPath}`);
+    const testLabel = opts.test ? " (test)" : "";
+    console.log(`\n✓ Import saved to: ${importPath}${testLabel}`);
     console.log(`  Date range: ${manifest.dateRange.from} to ${manifest.dateRange.to}`);
   }
 
@@ -1031,6 +1034,11 @@ async function main(): Promise<void> {
         })
         .option("dry-run", { type: "boolean", describe: "Preview without writing", default: false })
         .option("verbose", { type: "boolean", describe: "Show detailed output", default: false })
+        .option("test", {
+          type: "boolean",
+          describe: "Save to test-imports/ instead of imports/ (for manual testing)",
+          default: false,
+        })
     )
     .command("ingest <files...>", "Organize raw CSV files into data/raw/ structure", (yargs) =>
       yargs.positional("files", {
