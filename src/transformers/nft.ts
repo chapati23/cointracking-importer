@@ -1,11 +1,11 @@
 import { getFieldByKey, normalizeNumber } from "../field-mapping.js";
 import type {
-    CoinTrackingRow,
-    ConvertConfig,
-    CsvRow,
-    ParsedNativeTx,
-    ParsedNftTransfer,
-    TxHash,
+  CoinTrackingRow,
+  ConvertConfig,
+  CsvRow,
+  ParsedNativeTx,
+  ParsedNftTransfer,
+  TxHash,
 } from "../types.js";
 import { isZeroAddress, toAddress, toTxHash } from "../types.js";
 
@@ -42,6 +42,7 @@ export function formatNftCurrency(transfer: ParsedNftTransfer): string {
 
 // ---------- Transformation ----------
 
+// eslint-disable-next-line sonarjs/cognitive-complexity -- branching for send/receive/mint/burn cases
 export function transformNftTransfer(
   transfer: ParsedNftTransfer,
   config: ConvertConfig,

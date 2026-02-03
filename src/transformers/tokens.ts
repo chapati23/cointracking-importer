@@ -1,13 +1,13 @@
 import { getFieldByKey, normalizeNumber } from "../field-mapping.js";
 import type {
-    CoinTrackingRow,
-    ConvertConfig,
-    CsvRow,
-    ParsedNativeTx,
-    ParsedTokenTransfer,
-    TxHash,
+  CoinTrackingRow,
+  ConvertConfig,
+  CsvRow,
+  ParsedNativeTx,
+  ParsedTokenTransfer,
+  TxHash,
 } from "../types.js";
-import { isZeroAddress, toAddress, toTxHash, ZERO_ADDRESS } from "../types.js";
+import { isZeroAddress, toAddress, toTxHash } from "../types.js";
 
 // ---------- Parsing ----------
 
@@ -30,7 +30,9 @@ export function parseTokenRows(rows: CsvRow[]): ParsedTokenTransfer[] {
 
 // ---------- Grouping by Transaction ----------
 
-export function groupByTxHash(transfers: ParsedTokenTransfer[]): Map<TxHash, ParsedTokenTransfer[]> {
+export function groupByTxHash(
+  transfers: ParsedTokenTransfer[]
+): Map<TxHash, ParsedTokenTransfer[]> {
   const map = new Map<TxHash, ParsedTokenTransfer[]>();
   for (const transfer of transfers) {
     const existing = map.get(transfer.txHash) ?? [];
@@ -56,9 +58,7 @@ export function classifyTransfers(
   const outgoing = transfers.filter(
     (t) => t.from === addr && t.to !== addr && !isZeroAddress(t.from)
   );
-  const incoming = transfers.filter(
-    (t) => t.to === addr && t.from !== addr
-  );
+  const incoming = transfers.filter((t) => t.to === addr && t.from !== addr);
 
   return { outgoing, incoming };
 }
@@ -110,7 +110,7 @@ function createDepositRow(
   }
 
   // Check if it's from zero address (mint/airdrop)
-  const isMint = isZeroAddress(transfer.from) || transfer.from === ZERO_ADDRESS;
+  const isMint = isZeroAddress(transfer.from);
   const type = isMint ? "Airdrop" : "Deposit";
 
   return {
@@ -180,27 +180,21 @@ export function transformTokenRows(
 
     // Simple 1:1 swap
     if (isSimpleSwap(classified)) {
-      const swapRow = createSwapRow(
-        classified.outgoing[0]!,
-        classified.incoming[0]!,
-        fee,
-        config,
-        processedFeeHashes
-      );
-      result.push(swapRow);
+      const outgoing = classified.outgoing[0];
+      const incoming = classified.incoming[0];
+      if (outgoing && incoming) {
+        const swapRow = createSwapRow(outgoing, incoming, fee, config, processedFeeHashes);
+        result.push(swapRow);
+      }
       continue;
     }
 
     // Multi-token swap: treat as single trade (first out → last in)
-    if (classified.outgoing.length >= 1 && classified.incoming.length >= 1) {
+    const firstOutgoing = classified.outgoing[0];
+    const lastIncoming = classified.incoming.at(-1);
+    if (firstOutgoing && lastIncoming) {
       // Use first outgoing and last incoming for the trade
-      const swapRow = createSwapRow(
-        classified.outgoing[0]!,
-        classified.incoming[classified.incoming.length - 1]!,
-        fee,
-        config,
-        processedFeeHashes
-      );
+      const swapRow = createSwapRow(firstOutgoing, lastIncoming, fee, config, processedFeeHashes);
       result.push(swapRow);
       continue;
     }

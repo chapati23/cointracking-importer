@@ -6,7 +6,7 @@
     "esModuleInterop": true,
     "strict": true,
     "outDir": "dist",
-    "rootDir": "src",
+    "rootDir": ".",
     "resolveJsonModule": true,
     "skipLibCheck": true,
     "declaration": true,
@@ -17,6 +17,6 @@
     "noImplicitOverride": true,
     "noPropertyAccessFromIndexSignature": true
   },
-  "include": ["src"],
+  "include": ["src", "test", "vitest.config.ts", "eslint.config.js"],
   "exclude": ["node_modules", "dist", "data"]
 }

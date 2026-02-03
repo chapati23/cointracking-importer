@@ -37,13 +37,11 @@ npm run convert -- \
 When you run `npm run start`, you'll be guided through:
 
 1. **Input mode selection**:
-
    - Single file - import one CSV file of any type
    - Multiple files - select multiple files one by one
    - Folder - import all CSVs from a folder
 
 2. **Auto-detection**: CSV types are automatically detected from headers:
-
    - Native Transactions (has `Value_IN(*)` or `Value_OUT(*)`)
    - Token Transfers (has `TokenValue` + `TokenSymbol`)
    - Internal Transactions (has `ParentTxFrom`)
@@ -207,12 +205,40 @@ npm test
 # Run tests in watch mode
 npm run test:watch
 
+# Run tests with coverage
+npm run test:coverage
+
 # Type-check
 npm run typecheck
 
-# Lint
+# Lint (auto-fixes issues)
 npm run lint
 ```
+
+### Code Quality
+
+This project uses [Trunk](https://trunk.io) for code quality automation:
+
+**Pre-commit**: Auto-formats code with Prettier
+
+**Pre-push**: Runs full quality gate before pushing:
+
+- `trunk check --all` - ESLint, Prettier, Markdownlint, security scanners
+- TypeScript type checking
+- Full test suite with coverage
+
+**CI (GitHub Actions)**: Same checks run on every PR and push to main
+
+**Enabled linters**:
+
+| Linter       | Purpose                           |
+| ------------ | --------------------------------- |
+| ESLint       | TypeScript/JavaScript linting     |
+| Prettier     | Code formatting                   |
+| Markdownlint | Markdown formatting               |
+| Trufflehog   | Secret detection                  |
+| OSV-Scanner  | Dependency vulnerability scanning |
+| Codespell    | Typo detection                    |
 
 ## License
 

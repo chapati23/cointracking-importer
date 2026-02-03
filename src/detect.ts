@@ -70,9 +70,7 @@ export function getCsvTypeName(type: CsvType): string {
 /**
  * Auto-detect and categorize CSV files in a directory.
  */
-export function categorizeFiles(
-  filePaths: string[]
-): Record<CsvType, string[]> {
+export function categorizeFiles(filePaths: string[]): Record<CsvType, string[]> {
   const result: Record<CsvType, string[]> = {
     native: [],
     tokens: [],

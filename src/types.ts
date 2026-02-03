@@ -16,33 +16,30 @@ export function toTxHash(s: string): TxHash {
 
 // ---------- CoinTracking Output Types ----------
 
-export const COINTRACKING_TYPES = [
-  "Trade",
-  "Deposit",
-  "Withdrawal",
-  "Income",
-  "Mining",
-  "Airdrop",
-  "Staking",
-  "Masternode",
-  "Minting",
-  "Dividends",
-  "Lending Income",
-  "Interest Income",
-  "Reward / Bonus",
-  "Bounty",
-  "Gift / Tip",
-  "Spend",
-  "Donation",
-  "Gift",
-  "Stolen",
-  "Lost",
-  "Other Fee",
-  "Other Income",
-  "Other Expense",
-] as const;
-
-export type CoinTrackingType = (typeof COINTRACKING_TYPES)[number];
+export type CoinTrackingType =
+  | "Trade"
+  | "Deposit"
+  | "Withdrawal"
+  | "Income"
+  | "Mining"
+  | "Airdrop"
+  | "Staking"
+  | "Masternode"
+  | "Minting"
+  | "Dividends"
+  | "Lending Income"
+  | "Interest Income"
+  | "Reward / Bonus"
+  | "Bounty"
+  | "Gift / Tip"
+  | "Spend"
+  | "Donation"
+  | "Gift"
+  | "Stolen"
+  | "Lost"
+  | "Other Fee"
+  | "Other Income"
+  | "Other Expense";
 
 export interface CoinTrackingRow {
   Type: CoinTrackingType;
@@ -188,17 +185,13 @@ export interface ImportManifest {
   };
 }
 
-// ---------- Transformer Context ----------
+// ---------- Constants ----------
 
-export interface TransformContext {
-  config: ConvertConfig;
-  nativeByHash: Map<TxHash, ParsedNativeTx>;
-  processedFeeHashes: Set<TxHash>;
-}
-
-// ---------- Helpers ----------
+export const DATA_DIR = "data";
 
 export const ZERO_ADDRESS = toAddress("0x0000000000000000000000000000000000000000");
+
+// ---------- Helpers ----------
 
 export function isZeroAddress(addr: Address): boolean {
   return addr === ZERO_ADDRESS;

@@ -17,7 +17,7 @@ export function readCsv(filePath: string): CsvRow[] {
     trim: true,
     relax_quotes: true,
     relax_column_count: true,
-  }) as CsvRow[];
+  });
 }
 
 /**
@@ -33,7 +33,7 @@ export function getCsvHeaders(filePath: string): string[] {
     columns: false,
     skip_empty_lines: true,
     trim: true,
-  }) as string[][];
+  });
 
   return parsed[0] ?? [];
 }
@@ -73,19 +73,6 @@ export function writeCoinTrackingCsv(filePath: string, rows: CoinTrackingRow[]):
 }
 
 // ---------- File System Helpers ----------
-
-export function fileExists(filePath: string): boolean {
-  try {
-    fs.accessSync(filePath, fs.constants.R_OK);
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-export function ensureDir(dirPath: string): void {
-  fs.mkdirSync(dirPath, { recursive: true });
-}
 
 export function listCsvFiles(dirPath: string): string[] {
   if (!fs.existsSync(dirPath)) return [];

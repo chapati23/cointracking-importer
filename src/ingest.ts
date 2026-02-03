@@ -11,7 +11,7 @@ import type { CsvType } from "./types.js";
 /**
  * Try to extract an address from CSV file content or filename.
  */
-export function extractAddressFromFile(filePath: string): string | null {
+function extractAddressFromFile(filePath: string): string | null {
   const fileName = path.basename(filePath).toLowerCase();
 
   // Try filename patterns like "export-0x..." or "export-address-token-0x..."
@@ -86,7 +86,8 @@ export async function ingestFiles(filePaths: string[]): Promise<IngestResult | n
       name: "address",
       message: "Wallet address:",
       default: detectedAddress ?? undefined,
-      validate: (v: string) => (v.startsWith("0x") && v.length === 42 ? true : "Enter a valid 0x address"),
+      validate: (v: string) =>
+        v.startsWith("0x") && v.length === 42 ? true : "Enter a valid 0x address",
     },
     {
       type: "input",
