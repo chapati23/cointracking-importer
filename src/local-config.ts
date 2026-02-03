@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import { DATA_DIR } from "./types.js";
 
 // ---------- Type Definitions ----------
 
@@ -14,7 +15,6 @@ export interface LocalConfig {
 
 // ---------- Paths ----------
 
-const DATA_DIR = "data";
 const CONFIG_FILE = path.join(DATA_DIR, "addresses.json");
 
 // ---------- Read/Write Config ----------
@@ -71,7 +71,7 @@ export function saveAddress(entry: SavedAddress): void {
     (a) => a.address.toLowerCase() === normalizedAddress
   );
 
-  if (existingIndex >= 0) {
+  if (existingIndex !== -1) {
     config.addresses[existingIndex] = {
       ...config.addresses[existingIndex],
       ...entry,
@@ -87,28 +87,9 @@ export function saveAddress(entry: SavedAddress): void {
   writeLocalConfig(config);
 }
 
-export function removeAddress(address: string): boolean {
-  const config = readLocalConfig();
-  const normalizedAddress = address.toLowerCase();
-  const initialLength = config.addresses.length;
-
-  config.addresses = config.addresses.filter((a) => a.address.toLowerCase() !== normalizedAddress);
-
-  if (config.addresses.length < initialLength) {
-    writeLocalConfig(config);
-    return true;
-  }
-
-  return false;
-}
-
 // ---------- Display Helpers ----------
 
 export function formatAddressChoice(entry: SavedAddress): string {
   const shortAddr = `${entry.address.slice(0, 6)}...${entry.address.slice(-4)}`;
   return `${entry.name} (${shortAddr})`;
-}
-
-export function hasLocalConfig(): boolean {
-  return fs.existsSync(CONFIG_FILE);
 }

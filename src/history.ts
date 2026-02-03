@@ -1,8 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import type { HistoryData, ImportRecord } from "./types.js";
-
-const DATA_DIR = "data";
+import { DATA_DIR, type HistoryData, type ImportRecord } from "./types.js";
 const HISTORY_FILE = path.join(DATA_DIR, "history.json");
 
 // ---------- Read/Write History ----------
@@ -27,18 +25,13 @@ export function addImportRecord(record: ImportRecord): void {
 
   // Replace existing record with same ID or add new
   const existingIndex = history.imports.findIndex((i) => i.id === record.id);
-  if (existingIndex >= 0) {
+  if (existingIndex !== -1) {
     history.imports[existingIndex] = record;
   } else {
     history.imports.push(record);
   }
 
   writeHistory(history);
-}
-
-export function getImportRecord(id: string): ImportRecord | undefined {
-  const history = readHistory();
-  return history.imports.find((i) => i.id === id);
 }
 
 export function markAsImported(id: string): boolean {
@@ -65,7 +58,7 @@ export function generateImportId(chain: string, address: string, dateStr?: strin
   const chainLower = chain.toLowerCase();
   const addressPrefix = address.slice(0, 10).toLowerCase();
   const date = dateStr ?? new Date().toISOString().slice(0, 7); // YYYY-MM
-  return `${chainLower}_${addressPrefix}_${date.slice(0, 7).replace("-", "-")}`;
+  return `${chainLower}_${addressPrefix}_${date.slice(0, 7)}`;
 }
 
 // ---------- Directory Paths ----------

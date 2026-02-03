@@ -4,9 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   formatAddressChoice,
   getSavedAddresses,
-  hasLocalConfig,
   readLocalConfig,
-  removeAddress,
   saveAddress,
   writeLocalConfig,
   type LocalConfig,
@@ -38,27 +36,6 @@ describe("local-config", () => {
         fs.unlinkSync(CONFIG_FILE);
       }
     }
-  });
-
-  describe("hasLocalConfig", () => {
-    it("returns true when addresses.json exists", () => {
-      // Ensure file exists
-      if (!fs.existsSync(DATA_DIR)) {
-        fs.mkdirSync(DATA_DIR, { recursive: true });
-      }
-      fs.writeFileSync(CONFIG_FILE, JSON.stringify({ addresses: [] }), "utf8");
-
-      expect(hasLocalConfig()).toBe(true);
-    });
-
-    it("returns false when addresses.json is missing", () => {
-      // Remove file if it exists
-      if (fs.existsSync(CONFIG_FILE)) {
-        fs.unlinkSync(CONFIG_FILE);
-      }
-
-      expect(hasLocalConfig()).toBe(false);
-    });
   });
 
   describe("readLocalConfig", () => {
@@ -230,46 +207,6 @@ describe("local-config", () => {
       const config = readLocalConfig();
       expect(config.addresses).toHaveLength(1);
       expect(config.addresses[0]?.name).toBe("Second");
-    });
-  });
-
-  describe("removeAddress", () => {
-    beforeEach(() => {
-      const testConfig: LocalConfig = {
-        addresses: [
-          { name: "Wallet 1", address: "0xabc" },
-          { name: "Wallet 2", address: "0xdef" },
-        ],
-      };
-      if (!fs.existsSync(DATA_DIR)) {
-        fs.mkdirSync(DATA_DIR, { recursive: true });
-      }
-      fs.writeFileSync(CONFIG_FILE, JSON.stringify(testConfig), "utf8");
-    });
-
-    it("removes matching address", () => {
-      const result = removeAddress("0xabc");
-
-      expect(result).toBe(true);
-      const config = readLocalConfig();
-      expect(config.addresses).toHaveLength(1);
-      expect(config.addresses[0]?.address).toBe("0xdef");
-    });
-
-    it("returns false for non-existent address", () => {
-      const result = removeAddress("0xnotexist");
-
-      expect(result).toBe(false);
-      const config = readLocalConfig();
-      expect(config.addresses).toHaveLength(2);
-    });
-
-    it("matches case-insensitively", () => {
-      const result = removeAddress("0xABC");
-
-      expect(result).toBe(true);
-      const config = readLocalConfig();
-      expect(config.addresses).toHaveLength(1);
     });
   });
 

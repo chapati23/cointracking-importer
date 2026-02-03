@@ -7,6 +7,21 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 const CLI_PATH = path.join(process.cwd(), "src/index.ts");
 const TSX_PATH = "npx tsx";
 
+function createTestFixtures(dir: string) {
+  // Create native transactions CSV
+  const nativeContent = `"Transaction Hash","DateTime (UTC)","From","To","Value_IN(MNT)","Value_OUT(MNT)","TxnFee(MNT)","Method"
+"0xabc123","2024-12-04 12:00:00","0xsender","0xd8da6bf26964af9d7eed9e03e53415d37aa96045","100","0","0.001",""
+"0xdef456","2024-12-04 13:00:00","0xd8da6bf26964af9d7eed9e03e53415d37aa96045","0xreceiver","0","50","0.002","Transfer"`;
+
+  // Create token transfers CSV
+  const tokensContent = `"Transaction Hash","DateTime (UTC)","From","To","TokenValue","TokenSymbol","TokenName","ContractAddress"
+"0xtoken123","2024-12-04 14:00:00","0xd8da6bf26964af9d7eed9e03e53415d37aa96045","0xrouter","100","USDC","USD Coin","0xusdc"
+"0xtoken123","2024-12-04 14:00:00","0xrouter","0xd8da6bf26964af9d7eed9e03e53415d37aa96045","0.05","WETH","Wrapped Ether","0xweth"`;
+
+  fs.writeFileSync(path.join(dir, "native.csv"), nativeContent);
+  fs.writeFileSync(path.join(dir, "tokens.csv"), tokensContent);
+}
+
 describe("CLI E2E Tests", () => {
   let tempDir: string;
 
@@ -39,21 +54,6 @@ describe("CLI E2E Tests", () => {
         exitCode: err.status ?? 1,
       };
     }
-  }
-
-  function createTestFixtures(dir: string) {
-    // Create native transactions CSV
-    const nativeContent = `"Transaction Hash","DateTime (UTC)","From","To","Value_IN(MNT)","Value_OUT(MNT)","TxnFee(MNT)","Method"
-"0xabc123","2024-12-04 12:00:00","0xsender","0xd8da6bf26964af9d7eed9e03e53415d37aa96045","100","0","0.001",""
-"0xdef456","2024-12-04 13:00:00","0xd8da6bf26964af9d7eed9e03e53415d37aa96045","0xreceiver","0","50","0.002","Transfer"`;
-
-    // Create token transfers CSV
-    const tokensContent = `"Transaction Hash","DateTime (UTC)","From","To","TokenValue","TokenSymbol","TokenName","ContractAddress"
-"0xtoken123","2024-12-04 14:00:00","0xd8da6bf26964af9d7eed9e03e53415d37aa96045","0xrouter","100","USDC","USD Coin","0xusdc"
-"0xtoken123","2024-12-04 14:00:00","0xrouter","0xd8da6bf26964af9d7eed9e03e53415d37aa96045","0.05","WETH","Wrapped Ether","0xweth"`;
-
-    fs.writeFileSync(path.join(dir, "native.csv"), nativeContent);
-    fs.writeFileSync(path.join(dir, "tokens.csv"), tokensContent);
   }
 
   describe("convert command", () => {

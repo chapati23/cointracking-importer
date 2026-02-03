@@ -11,7 +11,7 @@ import type { CsvType } from "./types.js";
 /**
  * Try to extract an address from CSV file content or filename.
  */
-export function extractAddressFromFile(filePath: string): string | null {
+function extractAddressFromFile(filePath: string): string | null {
   const fileName = path.basename(filePath).toLowerCase();
 
   // Try filename patterns like "export-0x..." or "export-address-token-0x..."

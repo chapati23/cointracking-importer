@@ -42,6 +42,10 @@ import { toAddress } from "./types.js";
 
 dayjs.extend(utc);
 
+// ---------- Utilities ----------
+
+const isCsvFile = (name: string) => name.endsWith(".csv");
+
 // ---------- File Path Autocomplete Helper ----------
 
 interface FileChoice {
@@ -55,7 +59,7 @@ interface FileChoice {
  * Works like terminal tab completion - type a path and get matching suggestions.
  */
 function createFileSource(options: { basePath: string; filter?: (name: string) => boolean }) {
-  // eslint-disable-next-line @typescript-eslint/require-await -- library expects Promise
+  // eslint-disable-next-line @typescript-eslint/require-await, sonarjs/cognitive-complexity -- library expects Promise; path resolution logic
   return async (input: string | undefined): Promise<FileChoice[]> => {
     // Expand ~ to home directory
     const expandPath = (p: string): string => {
@@ -142,6 +146,7 @@ function createFileSource(options: { basePath: string; filter?: (name: string) =
  * Prompt for a file path with tab completion.
  * Returns the selected path or undefined if cancelled.
  */
+// eslint-disable-next-line sonarjs/cognitive-complexity -- interactive loop with multiple exit conditions
 async function promptFilePath(options: {
   message: string;
   basePath: string;
@@ -180,12 +185,12 @@ async function promptFilePath(options: {
       }
 
       return selected;
-    } catch (err) {
+    } catch (error) {
       // Handle cancellation (Ctrl+C)
-      if (err instanceof Error && err.name === "ExitPromptError") {
+      if (error instanceof Error && error.name === "ExitPromptError") {
         return undefined;
       }
-      throw err;
+      throw error;
     }
   }
 }
@@ -233,6 +238,7 @@ async function promptInputMode(): Promise<InputMode> {
  * Prompt for a folder path with tab completion.
  * Returns the selected directory path.
  */
+// eslint-disable-next-line sonarjs/cognitive-complexity -- interactive loop with multiple exit conditions
 async function promptFolderPath(options: {
   message: string;
   basePath: string;
@@ -285,11 +291,11 @@ async function promptFolderPath(options: {
         // Path doesn't exist
         return undefined;
       }
-    } catch (err) {
-      if (err instanceof Error && err.name === "ExitPromptError") {
+    } catch (error) {
+      if (error instanceof Error && error.name === "ExitPromptError") {
         return undefined;
       }
-      throw err;
+      throw error;
     }
   }
 }
@@ -298,10 +304,10 @@ async function promptFolderPath(options: {
  * Prompt for multiple files with a loop.
  * Shows running list of selected files with detected types.
  */
+// eslint-disable-next-line sonarjs/cognitive-complexity -- multi-step interactive file selection
 async function promptMultipleFiles(startDir: string): Promise<DetectedFile[]> {
   const files: DetectedFile[] = [];
   let lastDir = startDir;
-  const csvFilter = (name: string) => name.endsWith(".csv");
 
   // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
   while (true) {
@@ -355,7 +361,7 @@ async function promptMultipleFiles(startDir: string): Promise<DetectedFile[]> {
     const selected = await promptFilePath({
       message: "Select CSV file (type path, tab to complete):",
       basePath: lastDir,
-      filter: csvFilter,
+      filter: isCsvFile,
     });
 
     if (!selected) {
@@ -391,14 +397,12 @@ async function promptMultipleFiles(startDir: string): Promise<DetectedFile[]> {
  * Collect files based on input mode and detect their types.
  */
 async function collectAndDetectFiles(mode: InputMode, startDir: string): Promise<DetectedFile[]> {
-  const csvFilter = (name: string) => name.endsWith(".csv");
-
   switch (mode) {
     case "single": {
       const selected = await promptFilePath({
         message: "Select CSV file (type path, tab to complete):",
         basePath: startDir,
-        filter: csvFilter,
+        filter: isCsvFile,
       });
 
       if (!selected) {
@@ -634,6 +638,7 @@ interface ConvertOptions {
   verbose?: boolean;
 }
 
+// eslint-disable-next-line sonarjs/cognitive-complexity -- main CLI command with extensive interactive flow
 async function convertCommand(opts: ConvertOptions): Promise<void> {
   let nativeFile: string | undefined;
   let tokensFile: string | undefined;
@@ -942,7 +947,7 @@ async function convertCommand(opts: ConvertOptions): Promise<void> {
     const dates = allRows
       .map((r) => r.Date)
       .filter(Boolean)
-      .sort();
+      .toSorted((a, b) => a.localeCompare(b));
     addImportRecord({
       id: importId,
       chain,
@@ -956,7 +961,7 @@ async function convertCommand(opts: ConvertOptions): Promise<void> {
       rowCount: allRows.length,
       dateRange: {
         from: dates[0] ?? "",
-        to: dates[dates.length - 1] ?? "",
+        to: dates.at(-1) ?? "",
       },
       importedToCoinTracking: false,
     });
@@ -1070,13 +1075,13 @@ async function main(): Promise<void> {
   }
 }
 
-main().catch((err: unknown) => {
+main().catch((error: unknown) => {
   // Handle user cancellation gracefully (Ctrl+C)
-  if (err instanceof Error && err.name === "ExitPromptError") {
+  if (error instanceof Error && error.name === "ExitPromptError") {
     console.log("\n\nCancelled.");
     process.exit(0);
   }
 
-  console.error("Error:", err);
+  console.error("Error:", error);
   process.exit(1);
 });

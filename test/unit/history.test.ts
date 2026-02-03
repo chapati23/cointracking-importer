@@ -5,7 +5,6 @@ import {
   addImportRecord,
   ensureDataDirs,
   generateImportId,
-  getImportRecord,
   getOutputDir,
   getOutputFile,
   getRawDir,
@@ -234,33 +233,6 @@ describe("history", () => {
     });
   });
 
-  describe("getImportRecord", () => {
-    it("returns record if exists", () => {
-      const record: ImportRecord = {
-        id: "find_me",
-        chain: "Mantle",
-        address: "0x123",
-        nativeSymbol: "MNT",
-        processedAt: "2024-01-01T00:00:00Z",
-        inputFiles: [],
-        outputFile: "",
-        rowCount: 10,
-        dateRange: { from: "", to: "" },
-        importedToCoinTracking: false,
-      };
-      addImportRecord(record);
-
-      const found = getImportRecord("find_me");
-      expect(found).not.toBeUndefined();
-      expect(found?.id).toBe("find_me");
-    });
-
-    it("returns undefined if not found", () => {
-      const found = getImportRecord("nonexistent");
-      expect(found).toBeUndefined();
-    });
-  });
-
   describe("markAsImported", () => {
     it("updates imported flag", () => {
       const record: ImportRecord = {
@@ -280,7 +252,8 @@ describe("history", () => {
       const result = markAsImported("mark_test");
 
       expect(result).toBe(true);
-      const updated = getImportRecord("mark_test");
+      const history = readHistory();
+      const updated = history.imports.find((i) => i.id === "mark_test");
       expect(updated?.importedToCoinTracking).toBe(true);
     });
 

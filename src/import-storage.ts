@@ -4,11 +4,7 @@ import path from "node:path";
 import { readCsv } from "./csv-utils.js";
 import { getFieldByKey } from "./field-mapping.js";
 import { getSavedAddresses, type SavedAddress } from "./local-config.js";
-import type { CsvType, DetectedFile, ImportManifest } from "./types.js";
-
-// ---------- Constants ----------
-
-const DATA_DIR = "data";
+import { DATA_DIR, type CsvType, type DetectedFile, type ImportManifest } from "./types.js";
 const IMPORTS_DIR = path.join(DATA_DIR, "imports");
 
 // ---------- Address Path Formatting ----------
@@ -33,6 +29,7 @@ export function formatAddressPath(address: string): string {
  * Extract the date range from CSV files by scanning the DateTime column.
  * Returns the oldest and newest dates found.
  */
+// eslint-disable-next-line sonarjs/cognitive-complexity -- nested loops for file/row scanning
 export function extractDateRange(files: DetectedFile[]): { from: string; to: string } {
   const dates: string[] = [];
 
@@ -61,10 +58,10 @@ export function extractDateRange(files: DetectedFile[]): { from: string; to: str
     return { from: today, to: today };
   }
 
-  dates.sort();
+  const sortedDates = dates.toSorted((a, b) => a.localeCompare(b));
   return {
-    from: dates[0] ?? "",
-    to: dates[dates.length - 1] ?? "",
+    from: sortedDates[0] ?? "",
+    to: sortedDates.at(-1) ?? "",
   };
 }
 
@@ -138,7 +135,7 @@ function getUniqueDateRangeFolder(
   }
 
   // Add timestamp suffix for duplicate
-  const timestamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
+  const timestamp = new Date().toISOString().replaceAll(/[:.]/g, "-").slice(0, 19);
   return path.join(basePath, `${folderName}_${timestamp}`);
 }
 

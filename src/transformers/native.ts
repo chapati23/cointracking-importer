@@ -37,11 +37,7 @@ export function indexNativeByHash(txs: ParsedNativeTx[]): Map<TxHash, ParsedNati
 
 export function shouldSkipNativeTx(tx: ParsedNativeTx): boolean {
   // Skip if no value movement AND no fee (truly empty transaction)
-  if (tx.valueIn === 0 && tx.valueOut === 0 && tx.fee === 0) {
-    return true;
-  }
-
-  return false;
+  return tx.valueIn === 0 && tx.valueOut === 0 && tx.fee === 0;
 }
 
 export function transformNativeTx(

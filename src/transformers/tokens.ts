@@ -7,7 +7,7 @@ import type {
   ParsedTokenTransfer,
   TxHash,
 } from "../types.js";
-import { isZeroAddress, toAddress, toTxHash, ZERO_ADDRESS } from "../types.js";
+import { isZeroAddress, toAddress, toTxHash } from "../types.js";
 
 // ---------- Parsing ----------
 
@@ -110,7 +110,7 @@ function createDepositRow(
   }
 
   // Check if it's from zero address (mint/airdrop)
-  const isMint = isZeroAddress(transfer.from) || transfer.from === ZERO_ADDRESS;
+  const isMint = isZeroAddress(transfer.from);
   const type = isMint ? "Airdrop" : "Deposit";
 
   return {
@@ -191,7 +191,7 @@ export function transformTokenRows(
 
     // Multi-token swap: treat as single trade (first out → last in)
     const firstOutgoing = classified.outgoing[0];
-    const lastIncoming = classified.incoming[classified.incoming.length - 1];
+    const lastIncoming = classified.incoming.at(-1);
     if (firstOutgoing && lastIncoming) {
       // Use first outgoing and last incoming for the trade
       const swapRow = createSwapRow(firstOutgoing, lastIncoming, fee, config, processedFeeHashes);

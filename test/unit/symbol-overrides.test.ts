@@ -1,13 +1,10 @@
 import fs from "node:fs";
-import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   COINTRACKING_NATIVE_SYMBOLS,
   getDefaultNativeSymbol,
   readSymbolOverrides,
   resolveNativeSymbol,
-  resolveTokenSymbol,
-  writeSymbolOverrides,
 } from "../../src/symbol-overrides.js";
 
 // Mock fs module
@@ -107,36 +104,6 @@ describe("symbol-overrides", () => {
     });
   });
 
-  describe("writeSymbolOverrides", () => {
-    it("creates data directory if needed", () => {
-      mockFs.existsSync.mockReturnValue(false);
-      mockFs.mkdirSync.mockReturnValue(undefined);
-      mockFs.writeFileSync.mockReturnValue(undefined);
-
-      writeSymbolOverrides({ nativeSymbols: {}, tokenSymbols: {} });
-
-      expect(mockFs.mkdirSync).toHaveBeenCalledWith("data", { recursive: true });
-    });
-
-    it("writes formatted JSON to file", () => {
-      mockFs.existsSync.mockReturnValue(true);
-      mockFs.writeFileSync.mockReturnValue(undefined);
-
-      const overrides = {
-        nativeSymbols: { Test: "TEST2" },
-        tokenSymbols: { ABC: "ABC3" },
-      };
-
-      writeSymbolOverrides(overrides);
-
-      expect(mockFs.writeFileSync).toHaveBeenCalledWith(
-        path.join("data", "symbol-overrides.json"),
-        JSON.stringify(overrides, null, 2),
-        "utf8"
-      );
-    });
-  });
-
   // ---------- Symbol Resolution ----------
 
   describe("resolveNativeSymbol", () => {
@@ -183,30 +150,6 @@ describe("symbol-overrides", () => {
 
       // User override should win over built-in "ETH"
       expect(result).toBe("ETH_CUSTOM");
-    });
-  });
-
-  describe("resolveTokenSymbol", () => {
-    it("returns user override when present", () => {
-      mockFs.existsSync.mockReturnValue(true);
-      mockFs.readFileSync.mockReturnValue(
-        JSON.stringify({
-          nativeSymbols: {},
-          tokenSymbols: { USDT: "USDT2" },
-        })
-      );
-
-      const result = resolveTokenSymbol("USDT");
-
-      expect(result).toBe("USDT2");
-    });
-
-    it("returns original symbol when no override", () => {
-      mockFs.existsSync.mockReturnValue(false);
-
-      const result = resolveTokenSymbol("RANDOM");
-
-      expect(result).toBe("RANDOM");
     });
   });
 

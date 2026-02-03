@@ -3,8 +3,6 @@ import os from "node:os";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import {
-  ensureDir,
-  fileExists,
   getCsvHeaders,
   listCsvFiles,
   readCsv,
@@ -298,45 +296,6 @@ John,30,NYC`;
       const content = fs.readFileSync(filePath, "utf8");
       expect(content).toContain("New content");
       expect(content).not.toContain("old content");
-    });
-  });
-
-  describe("fileExists", () => {
-    it("returns true for existing file", () => {
-      const filePath = path.join(tempDir, "exists.txt");
-      fs.writeFileSync(filePath, "content");
-
-      expect(fileExists(filePath)).toBe(true);
-    });
-
-    it("returns false for non-existing file", () => {
-      expect(fileExists(path.join(tempDir, "nonexistent.txt"))).toBe(false);
-    });
-
-    it("returns true for existing directory", () => {
-      // Directories are technically readable
-      expect(fileExists(tempDir)).toBe(true);
-    });
-  });
-
-  describe("ensureDir", () => {
-    it("creates nested directories", () => {
-      const nestedPath = path.join(tempDir, "a", "b", "c");
-
-      ensureDir(nestedPath);
-
-      expect(fs.existsSync(nestedPath)).toBe(true);
-    });
-
-    it("is no-op for existing directory", () => {
-      const existingDir = path.join(tempDir, "existing");
-      fs.mkdirSync(existingDir);
-
-      // Should not throw
-      expect(() => {
-        ensureDir(existingDir);
-      }).not.toThrow();
-      expect(fs.existsSync(existingDir)).toBe(true);
     });
   });
 

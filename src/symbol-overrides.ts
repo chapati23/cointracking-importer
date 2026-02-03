@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import { DATA_DIR } from "./types.js";
 
 // ---------- Built-in Cointracking Native Symbols ----------
 // These are the official symbols Cointracking uses for EVM chain native tokens.
@@ -30,8 +31,6 @@ export const COINTRACKING_NATIVE_SYMBOLS: Record<string, string> = {
 };
 
 // ---------- User Override Configuration ----------
-
-const DATA_DIR = "data";
 const OVERRIDES_FILE = path.join(DATA_DIR, "symbol-overrides.json");
 
 export interface SymbolOverrides {
@@ -39,12 +38,6 @@ export interface SymbolOverrides {
   nativeSymbols: Record<string, string>;
   // Token symbol (from CSV) → Cointracking symbol
   tokenSymbols: Record<string, string>;
-}
-
-function ensureDataDir(): void {
-  if (!fs.existsSync(DATA_DIR)) {
-    fs.mkdirSync(DATA_DIR, { recursive: true });
-  }
 }
 
 export function readSymbolOverrides(): SymbolOverrides {
@@ -77,48 +70,23 @@ export function readSymbolOverrides(): SymbolOverrides {
   }
 }
 
-export function writeSymbolOverrides(overrides: SymbolOverrides): void {
-  ensureDataDir();
-  fs.writeFileSync(OVERRIDES_FILE, JSON.stringify(overrides, null, 2), "utf8");
-}
-
 // ---------- Symbol Resolution ----------
+
+/**
+ * Look up the native symbol for a chain.
+ * Priority: user overrides > built-in defaults
+ */
+function lookupNativeSymbol(chain: string): string | undefined {
+  const overrides = readSymbolOverrides();
+  return overrides.nativeSymbols[chain] ?? COINTRACKING_NATIVE_SYMBOLS[chain];
+}
 
 /**
  * Resolve the Cointracking-compatible native symbol for a chain.
  * Priority: user overrides > built-in defaults > original symbol
  */
 export function resolveNativeSymbol(chain: string, originalSymbol: string): string {
-  const overrides = readSymbolOverrides();
-
-  // 1. Check user overrides first
-  if (overrides.nativeSymbols[chain]) {
-    return overrides.nativeSymbols[chain];
-  }
-
-  // 2. Check built-in defaults
-  if (COINTRACKING_NATIVE_SYMBOLS[chain]) {
-    return COINTRACKING_NATIVE_SYMBOLS[chain];
-  }
-
-  // 3. Fall back to original symbol
-  return originalSymbol;
-}
-
-/**
- * Resolve a token symbol to its Cointracking-compatible version.
- * Useful for tokens that have different symbols in Cointracking.
- */
-export function resolveTokenSymbol(originalSymbol: string): string {
-  const overrides = readSymbolOverrides();
-
-  // Check user overrides
-  if (overrides.tokenSymbols[originalSymbol]) {
-    return overrides.tokenSymbols[originalSymbol];
-  }
-
-  // Return original if no override
-  return originalSymbol;
+  return lookupNativeSymbol(chain) ?? originalSymbol;
 }
 
 /**
@@ -126,13 +94,5 @@ export function resolveTokenSymbol(originalSymbol: string): string {
  * Returns the Cointracking symbol if known, otherwise undefined.
  */
 export function getDefaultNativeSymbol(chain: string): string | undefined {
-  const overrides = readSymbolOverrides();
-
-  // Check user overrides first
-  if (overrides.nativeSymbols[chain]) {
-    return overrides.nativeSymbols[chain];
-  }
-
-  // Check built-in defaults
-  return COINTRACKING_NATIVE_SYMBOLS[chain];
+  return lookupNativeSymbol(chain);
 }
