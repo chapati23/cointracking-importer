@@ -188,6 +188,8 @@ export interface ImportManifest {
 // ---------- Constants ----------
 
 export const DATA_DIR = "data";
+export const IMPORTS_DIR = "imports";
+export const TEST_IMPORTS_DIR = "test-imports";
 
 export const ZERO_ADDRESS = toAddress("0x0000000000000000000000000000000000000000");
 

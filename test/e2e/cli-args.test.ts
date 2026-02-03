@@ -1,11 +1,10 @@
-import { execSync } from "node:child_process";
+import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 const CLI_PATH = path.join(process.cwd(), "src/index.ts");
-const TSX_PATH = "npx tsx";
 
 function createTestFixtures(dir: string) {
   // Create native transactions CSV
@@ -39,21 +38,18 @@ describe("CLI E2E Tests", () => {
     args: string[],
     cwd: string = tempDir
   ): { stdout: string; stderr: string; exitCode: number } {
-    try {
-      const stdout = execSync(`${TSX_PATH} ${CLI_PATH} ${args.join(" ")} 2>&1`, {
-        cwd,
-        encoding: "utf8",
-        env: { ...process.env, HOME: tempDir },
-      });
-      return { stdout, stderr: "", exitCode: 0 };
-    } catch (error) {
-      const err = error as { stdout?: string; stderr?: string; status?: number };
-      return {
-        stdout: err.stdout ?? "",
-        stderr: err.stderr ?? "",
-        exitCode: err.status ?? 1,
-      };
-    }
+    // Use spawnSync with array args to avoid shell command injection (CWE-78)
+    // eslint-disable-next-line sonarjs/no-os-command-from-path -- npx is safe in test context
+    const result = spawnSync("npx", ["tsx", CLI_PATH, ...args], {
+      cwd,
+      encoding: "utf8",
+      env: { ...process.env, HOME: tempDir },
+    });
+    return {
+      stdout: result.stdout,
+      stderr: result.stderr,
+      exitCode: result.status ?? 1,
+    };
   }
 
   describe("convert command", () => {
@@ -64,12 +60,18 @@ describe("CLI E2E Tests", () => {
 
         const result = runCli([
           "convert",
-          `--address 0xd8da6bf26964af9d7eed9e03e53415d37aa96045`,
-          `--chain Mantle`,
-          `--nativeSymbol MNT`,
-          `--native "${path.join(tempDir, "native.csv")}"`,
-          `--tokens "${path.join(tempDir, "tokens.csv")}"`,
-          `--output "${outputPath}"`,
+          "--address",
+          "0xd8da6bf26964af9d7eed9e03e53415d37aa96045",
+          "--chain",
+          "Mantle",
+          "--nativeSymbol",
+          "MNT",
+          "--native",
+          path.join(tempDir, "native.csv"),
+          "--tokens",
+          path.join(tempDir, "tokens.csv"),
+          "--output",
+          outputPath,
         ]);
 
         expect(result.exitCode).toBe(0);
@@ -87,13 +89,19 @@ describe("CLI E2E Tests", () => {
 
         const result = runCli([
           "convert",
-          `--address 0xd8da6bf26964af9d7eed9e03e53415d37aa96045`,
-          `--chain Mantle`,
-          `--nativeSymbol MNT`,
-          `--native "${path.join(tempDir, "native.csv")}"`,
-          `--tokens "${path.join(tempDir, "tokens.csv")}"`,
-          `--output "${outputPath}"`,
-          `--dry-run`,
+          "--address",
+          "0xd8da6bf26964af9d7eed9e03e53415d37aa96045",
+          "--chain",
+          "Mantle",
+          "--nativeSymbol",
+          "MNT",
+          "--native",
+          path.join(tempDir, "native.csv"),
+          "--tokens",
+          path.join(tempDir, "tokens.csv"),
+          "--output",
+          outputPath,
+          "--dry-run",
         ]);
 
         expect(result.exitCode).toBe(0);
@@ -108,13 +116,19 @@ describe("CLI E2E Tests", () => {
 
         const result = runCli([
           "convert",
-          `--address 0xd8da6bf26964af9d7eed9e03e53415d37aa96045`,
-          `--chain Mantle`,
-          `--nativeSymbol MNT`,
-          `--native "${path.join(tempDir, "native.csv")}"`,
-          `--tokens "${path.join(tempDir, "tokens.csv")}"`,
-          `--output "${outputPath}"`,
-          `--verbose`,
+          "--address",
+          "0xd8da6bf26964af9d7eed9e03e53415d37aa96045",
+          "--chain",
+          "Mantle",
+          "--nativeSymbol",
+          "MNT",
+          "--native",
+          path.join(tempDir, "native.csv"),
+          "--tokens",
+          path.join(tempDir, "tokens.csv"),
+          "--output",
+          outputPath,
+          "--verbose",
         ]);
 
         expect(result.exitCode).toBe(0);
@@ -125,10 +139,14 @@ describe("CLI E2E Tests", () => {
       it("errors on non-existent file path", () => {
         const result = runCli([
           "convert",
-          `--address 0xd8da6bf26964af9d7eed9e03e53415d37aa96045`,
-          `--chain Mantle`,
-          `--nativeSymbol MNT`,
-          `--native "/nonexistent/native.csv"`,
+          "--address",
+          "0xd8da6bf26964af9d7eed9e03e53415d37aa96045",
+          "--chain",
+          "Mantle",
+          "--nativeSymbol",
+          "MNT",
+          "--native",
+          "/nonexistent/native.csv",
         ]);
 
         // CLI exits with error when file doesn't exist
@@ -143,13 +161,20 @@ describe("CLI E2E Tests", () => {
 
         const result = runCli([
           "convert",
-          `--address 0xd8da6bf26964af9d7eed9e03e53415d37aa96045`,
-          `--chain Mantle`,
-          `--nativeSymbol MNT`,
-          `--native "${path.join(tempDir, "native.csv")}"`,
-          `--tokens "${path.join(tempDir, "tokens.csv")}"`,
-          `--output "${outputPath}"`,
-          `--cutoff 2024-12-04`,
+          "--address",
+          "0xd8da6bf26964af9d7eed9e03e53415d37aa96045",
+          "--chain",
+          "Mantle",
+          "--nativeSymbol",
+          "MNT",
+          "--native",
+          path.join(tempDir, "native.csv"),
+          "--tokens",
+          path.join(tempDir, "tokens.csv"),
+          "--output",
+          outputPath,
+          "--cutoff",
+          "2024-12-04",
         ]);
 
         expect(result.exitCode).toBe(0);
@@ -164,11 +189,15 @@ describe("CLI E2E Tests", () => {
 
         const result = runCli([
           "convert",
-          `"${tempDir}"`,
-          `--address 0xd8da6bf26964af9d7eed9e03e53415d37aa96045`,
-          `--chain Mantle`,
-          `--nativeSymbol MNT`,
-          `--output "${outputPath}"`,
+          tempDir,
+          "--address",
+          "0xd8da6bf26964af9d7eed9e03e53415d37aa96045",
+          "--chain",
+          "Mantle",
+          "--nativeSymbol",
+          "MNT",
+          "--output",
+          outputPath,
         ]);
 
         expect(result.exitCode).toBe(0);

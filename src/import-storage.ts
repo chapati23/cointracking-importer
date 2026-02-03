@@ -4,8 +4,18 @@ import path from "node:path";
 import { readCsv } from "./csv-utils.js";
 import { getFieldByKey } from "./field-mapping.js";
 import { getSavedAddresses, type SavedAddress } from "./local-config.js";
-import { DATA_DIR, type CsvType, type DetectedFile, type ImportManifest } from "./types.js";
-const IMPORTS_DIR = path.join(DATA_DIR, "imports");
+import {
+  DATA_DIR,
+  IMPORTS_DIR,
+  TEST_IMPORTS_DIR,
+  type CsvType,
+  type DetectedFile,
+  type ImportManifest,
+} from "./types.js";
+
+function getImportsDir(testMode: boolean): string {
+  return path.join(DATA_DIR, testMode ? TEST_IMPORTS_DIR : IMPORTS_DIR);
+}
 
 // ---------- Address Path Formatting ----------
 
@@ -152,6 +162,7 @@ export interface SaveImportOptions {
   inputFiles: DetectedFile[];
   outputPath: string;
   outputRowCount: number;
+  testMode?: boolean;
 }
 
 export interface SaveImportResult {
@@ -177,9 +188,10 @@ export function saveImport(opts: SaveImportOptions): SaveImportResult {
   const dateRange = extractDateRange(opts.inputFiles);
 
   // Build folder path
+  const importsDir = getImportsDir(opts.testMode ?? false);
   const chainFolder = opts.chain.toLowerCase();
   const addressFolder = formatAddressPath(opts.address);
-  const basePath = path.join(IMPORTS_DIR, chainFolder, addressFolder);
+  const basePath = path.join(importsDir, chainFolder, addressFolder);
 
   // Ensure base path exists
   fs.mkdirSync(basePath, { recursive: true });

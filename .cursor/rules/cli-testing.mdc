@@ -12,8 +12,9 @@ alwaysApply: true
 npm run start # or `npm run convert` without any params
 
 
-# Convert with explicit files (non-interactive)
+# Convert with explicit files (non-interactive, saves to test-imports/)
 npm run convert -- \
+  --test \
   --address 0x2e17bc5bc5fa3e6691a0965e240f12fdccd0d1b1 \
   --chain Mantle \
   --nativeSymbol MNT \
@@ -27,7 +28,19 @@ npm run convert data/raw/<import-id>
 
 # Dry run (preview without writing)
 npm run convert -- --native test/fixtures/mantle/native.csv --dry-run --verbose
+
+# Clean up test imports
+npm run clean:test-imports
 ```
+
+## Test Mode (`--test`)
+
+Use `--test` for manual CLI testing. This saves imports to `data/test-imports/` instead of `data/imports/`, keeping real imports separate from test artifacts.
+
+- **With `--test`**: Saved to `data/test-imports/` (safe to delete anytime)
+- **Without `--test`**: Saved to `data/imports/` (real imports, preserved)
+
+Clean up test artifacts with `npm run clean:test-imports`.
 
 ## Test Fixtures
 
@@ -43,6 +56,7 @@ Available in `test/fixtures/mantle/`:
 | `--address 0x123` | `--address 0x2e17bc5bc5fa3e6691a0965e240f12fdccd0d1b1` (must be 42 chars) |
 | `--native ./test/` | `--native ./test/fixtures/mantle/native.csv` (must be a file, not directory) |
 | Missing `--address` | Without `--address`, CLI prompts interactively (will hang in non-TTY) |
+| Forgetting `--test` | Without `--test`, archives go to `data/imports/` (real imports) |
 
 ## Required vs Optional Flags
 
@@ -52,3 +66,5 @@ For non-interactive testing, you need:
 3. `--chain` and `--nativeSymbol` - Optional, defaults prompt interactively
 
 For fully non-interactive: provide `--address`, `--chain`, and `--nativeSymbol`.
+
+**Recommended**: Always use `--test` when manually testing to avoid polluting real imports.
