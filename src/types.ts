@@ -23,6 +23,7 @@ export type CoinTrackingType =
   | "Income"
   | "Mining"
   | "Airdrop"
+  | "Airdrop (non taxable)"
   | "Staking"
   | "Masternode"
   | "Minting"

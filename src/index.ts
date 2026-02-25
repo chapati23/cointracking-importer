@@ -25,7 +25,11 @@ import {
   saveAddress,
   type SavedAddress,
 } from "./local-config.js";
-import { getDefaultNativeSymbol, resolveNativeSymbol } from "./symbol-overrides.js";
+import {
+  getDefaultNativeSymbol,
+  resolveNativeSymbol,
+  resolveTokenSymbol,
+} from "./symbol-overrides.js";
 import { transformInternalRows } from "./transformers/internal.js";
 import { indexNativeByHash, parseNativeRows, transformNativeRows } from "./transformers/native.js";
 import { transformNftRows } from "./transformers/nft.js";
@@ -890,6 +894,13 @@ async function convertCommand(opts: ConvertOptions): Promise<void> {
     processedFeeHashes
   );
   allRows.push(...nft1155Result);
+
+  // Normalize token symbols to Cointracking-compatible variants (e.g. ATOM -> ATOM2).
+  for (const row of allRows) {
+    row.BuyCurrency = resolveTokenSymbol(row.BuyCurrency);
+    row.SellCurrency = resolveTokenSymbol(row.SellCurrency);
+    row.FeeCurrency = resolveTokenSymbol(row.FeeCurrency);
+  }
 
   // Sort by date
   allRows.sort((a, b) => dayjs(a.Date).valueOf() - dayjs(b.Date).valueOf());

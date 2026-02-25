@@ -28,6 +28,15 @@ export const COINTRACKING_NATIVE_SYMBOLS: Record<string, string> = {
 
   // Chains not natively supported by Cointracking (user-verified symbols)
   Mantle: "MNT3",
+  Dymension: "DYM",
+};
+
+// ---------- Built-in Cointracking Token Symbols ----------
+// Token-level symbol disambiguation used in Buy/Sell/Fee currency columns.
+export const COINTRACKING_TOKEN_SYMBOLS: Record<string, string> = {
+  ATOM: "ATOM2",
+  STARS: "STARS3",
+  TIA: "TIA3",
 };
 
 // ---------- User Override Configuration ----------
@@ -95,4 +104,17 @@ export function resolveNativeSymbol(chain: string, originalSymbol: string): stri
  */
 export function getDefaultNativeSymbol(chain: string): string | undefined {
   return lookupNativeSymbol(chain);
+}
+
+/**
+ * Resolve Cointracking-compatible token symbol.
+ * Priority: user overrides > built-in defaults > original symbol
+ */
+export function resolveTokenSymbol(originalSymbol: string): string {
+  const overrides = readSymbolOverrides();
+  return (
+    overrides.tokenSymbols[originalSymbol] ??
+    COINTRACKING_TOKEN_SYMBOLS[originalSymbol] ??
+    originalSymbol
+  );
 }
