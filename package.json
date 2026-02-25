@@ -38,7 +38,7 @@
     "@types/yargs": "^17.0.33",
     "@vitest/coverage-v8": "^4.0.18",
     "eslint": "^9.18.0",
-    "eslint-plugin-sonarjs": "^3.0.6",
+    "eslint-plugin-sonarjs": "^4.0.0",
     "eslint-plugin-unicorn": "^62.0.0",
     "knip": "^5.83.0",
     "prettier": "^3.4.2",

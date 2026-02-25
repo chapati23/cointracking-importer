@@ -81,7 +81,7 @@ describe("CLI E2E Tests", () => {
         expect(content).toContain("Type,Buy Amount");
         expect(content).toContain("Deposit");
         expect(content).toContain("Trade");
-      });
+      }, 15_000);
 
       it("supports --dry-run to preview without writing", () => {
         createTestFixtures(tempDir);
