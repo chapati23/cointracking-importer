@@ -302,5 +302,67 @@ describe("Transformation Pipeline Integration", () => {
       expect(withdrawals).toHaveLength(1);
       expect(withdrawals[0]?.SellAmount).toBe("109");
     });
+
+    it("processes Dymension fixture files correctly", () => {
+      const fixtureDir = path.join(process.cwd(), "test/fixtures/dymension");
+      const nativePath = path.join(fixtureDir, "native.csv");
+      const tokensPath = path.join(fixtureDir, "tokens.csv");
+
+      if (!fs.existsSync(nativePath) || !fs.existsSync(tokensPath)) {
+        return;
+      }
+
+      const dymConfig = {
+        address: toAddress("0x1234567890abcdef1234567890abcdef12345678"),
+        nativeSymbol: "DYM",
+        exchange: "Dymension",
+      };
+
+      const nativeRows = readCsv(nativePath);
+      const tokenRows = readCsv(tokensPath);
+
+      const parsedNative = parseNativeRows(nativeRows);
+      const nativeByHash = indexNativeByHash(parsedNative);
+      const processedFeeHashes = new Set<TxHash>();
+
+      const tokenResult = transformTokenRows(
+        tokenRows,
+        dymConfig,
+        nativeByHash,
+        processedFeeHashes
+      );
+
+      const nativeResult = transformNativeRows(
+        nativeRows,
+        dymConfig,
+        processedFeeHashes,
+        tokenResult.processedHashes
+      );
+
+      const allRows = [...tokenResult.rows, ...nativeResult];
+
+      expect(allRows.length).toBeGreaterThan(0);
+
+      // Token burn (to zero address) should be processed
+      const burns = tokenResult.rows.filter((r) => r.Comment.includes("burn"));
+      expect(burns).toHaveLength(1);
+
+      // Incoming native transfer should produce a Deposit
+      const deposits = nativeResult.filter((r) => r.Type === "Deposit");
+      expect(deposits).toHaveLength(1);
+      expect(deposits[0]?.BuyAmount).toBe("25");
+      expect(deposits[0]?.BuyCurrency).toBe("DYM");
+
+      // Outgoing native transfer (Bridge) should produce a Withdrawal
+      const withdrawals = nativeResult.filter((r) => r.Type === "Withdrawal");
+      expect(withdrawals).toHaveLength(1);
+      expect(withdrawals[0]?.SellAmount).toBe("50");
+      expect(withdrawals[0]?.SellCurrency).toBe("DYM");
+
+      // All rows should use Dymension as exchange
+      for (const row of allRows) {
+        expect(row.Exchange).toBe("Dymension");
+      }
+    });
   });
 });

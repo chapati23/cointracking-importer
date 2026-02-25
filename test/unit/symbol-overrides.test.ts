@@ -2,9 +2,11 @@ import fs from "node:fs";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   COINTRACKING_NATIVE_SYMBOLS,
+  COINTRACKING_TOKEN_SYMBOLS,
   getDefaultNativeSymbol,
   readSymbolOverrides,
   resolveNativeSymbol,
+  resolveTokenSymbol,
 } from "../../src/symbol-overrides.js";
 
 // Mock fs module
@@ -42,6 +44,24 @@ describe("symbol-overrides", () => {
     it("has correct symbol for BSC aliases", () => {
       expect(COINTRACKING_NATIVE_SYMBOLS["Binance Smart Chain"]).toBe("BNB");
       expect(COINTRACKING_NATIVE_SYMBOLS["BSC"]).toBe("BNB");
+    });
+
+    it("has correct symbol for Dymension", () => {
+      expect(COINTRACKING_NATIVE_SYMBOLS["Dymension"]).toBe("DYM");
+    });
+  });
+
+  describe("COINTRACKING_TOKEN_SYMBOLS", () => {
+    it("has ATOM mapped to ATOM2", () => {
+      expect(COINTRACKING_TOKEN_SYMBOLS["ATOM"]).toBe("ATOM2");
+    });
+
+    it("has STARS mapped to STARS3", () => {
+      expect(COINTRACKING_TOKEN_SYMBOLS["STARS"]).toBe("STARS3");
+    });
+
+    it("has TIA mapped to TIA3", () => {
+      expect(COINTRACKING_TOKEN_SYMBOLS["TIA"]).toBe("TIA3");
     });
   });
 
@@ -182,6 +202,38 @@ describe("symbol-overrides", () => {
       const result = getDefaultNativeSymbol("UnknownChain");
 
       expect(result).toBeUndefined();
+    });
+  });
+
+  describe("resolveTokenSymbol", () => {
+    it("returns user override when present", () => {
+      mockFs.existsSync.mockReturnValue(true);
+      mockFs.readFileSync.mockReturnValue(
+        JSON.stringify({
+          nativeSymbols: {},
+          tokenSymbols: { ATOM: "ATOM_CUSTOM" },
+        })
+      );
+
+      const result = resolveTokenSymbol("ATOM");
+
+      expect(result).toBe("ATOM_CUSTOM");
+    });
+
+    it("returns built-in mapping when no user override", () => {
+      mockFs.existsSync.mockReturnValue(false);
+
+      expect(resolveTokenSymbol("ATOM")).toBe("ATOM2");
+      expect(resolveTokenSymbol("STARS")).toBe("STARS3");
+      expect(resolveTokenSymbol("TIA")).toBe("TIA3");
+    });
+
+    it("returns original symbol when unknown", () => {
+      mockFs.existsSync.mockReturnValue(false);
+
+      const result = resolveTokenSymbol("USDC");
+
+      expect(result).toBe("USDC");
     });
   });
 });

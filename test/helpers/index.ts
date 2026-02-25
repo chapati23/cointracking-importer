@@ -1,5 +1,5 @@
 /**
- * Test helpers for cointracking-evm-importer tests.
+ * Test helpers for cointracking-importer tests.
  *
  * These utilities provide common functionality for creating mock data,
  * setting up test environments, and verifying outputs.
