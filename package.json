@@ -1,5 +1,5 @@
 {
-  "name": "cointracking-evm-importer",
+  "name": "cointracking-importer",
   "version": "1.0.0",
   "type": "module",
   "main": "dist/index.js",

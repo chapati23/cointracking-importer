@@ -1,4 +1,4 @@
-# cointracking-evm-importer
+# cointracking-importer
 
 Convert EtherScan/MantleScan CSV exports to CoinTracking-compatible format.
 
