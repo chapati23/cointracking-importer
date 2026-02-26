@@ -7,7 +7,14 @@ type FieldPattern = string | RegExp;
 export const FIELD_PATTERNS = {
   // Common fields
   txHash: ["Transaction Hash", "Txhash", "TxHash", "Hash"],
-  dateTime: ["DateTime (UTC)", "DateTime UTC", "Date Time (UTC)", "DateTime", "Timestamp"],
+  dateTime: [
+    "DateTime (UTC)",
+    "DateTime UTC",
+    "Date Time (UTC)",
+    "DateTime (Europe/Berlin)",
+    "DateTime",
+    "Timestamp",
+  ],
   unixTimestamp: ["UnixTimestamp", "Unix Timestamp", "Timestamp"],
   from: ["From"],
   to: ["To"],
