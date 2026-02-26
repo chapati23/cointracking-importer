@@ -1,0 +1,4 @@
+[[IgnoredVulns]]
+id = "GHSA-mw96-cpmx-2vgc"
+reason = "Transitive dep via vitest/vite → rollup. No upgrade path available yet. Path traversal requires crafted input filenames, not exploitable in this context."
+ignoreUntil = 2026-06-01
