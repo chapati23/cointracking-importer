@@ -236,7 +236,7 @@ async function autoConvert(
       inputFiles: detectedFiles,
       outputPath,
       outputRowCount: allRows.length,
-      testMode: true,
+      testMode: false,
     });
     console.log(`  Import saved to: ${importPath} (test)`);
   }
