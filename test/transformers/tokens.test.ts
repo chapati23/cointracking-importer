@@ -359,6 +359,130 @@ describe("transformTokenRows", () => {
     expect(result.rows[0]?.Fee).toBe("0.005");
     expect(result.rows[0]?.FeeCurrency).toBe("MNT");
   });
+
+  it("creates Trade for incoming token with ETH payment (NFT mint)", () => {
+    const rows = [
+      {
+        "Transaction Hash": "0xnftmint",
+        "DateTime (UTC)": "2024-12-04 12:00:00",
+        From: "0x0000000000000000000000000000000000000000",
+        To: "0xd8da6bf26964af9d7eed9e03e53415d37aa96045",
+        TokenValue: "1",
+        TokenSymbol: "$HEY",
+        TokenName: "Hey!",
+        ContractAddress: "0xnftcontract",
+      },
+    ];
+
+    const nativeTx: ParsedNativeTx = {
+      txHash: "0xnftmint" as TxHash,
+      dateTime: "2024-12-04 12:00:00",
+      from: toAddress("0xd8da6bf26964af9d7eed9e03e53415d37aa96045"),
+      to: toAddress("0xnftcontract"),
+      valueIn: 0,
+      valueOut: 0.002777,
+      fee: 0.0001,
+      method: "mint",
+    };
+
+    const nativeByHash = new Map<TxHash, ParsedNativeTx>();
+    nativeByHash.set("0xnftmint" as TxHash, nativeTx);
+    const processedFeeHashes = new Set<TxHash>();
+    const result = transformTokenRows(rows, config, nativeByHash, processedFeeHashes);
+
+    expect(result.rows).toHaveLength(1);
+    expect(result.rows[0]).toMatchObject({
+      Type: "Trade",
+      BuyAmount: "1",
+      BuyCurrency: "$HEY",
+      SellAmount: "0.002777",
+      SellCurrency: "MNT",
+      Fee: "0.0001",
+      FeeCurrency: "MNT",
+    });
+    expect(result.rows[0]?.Comment).toContain("NFT mint (trade)");
+  });
+
+  it("creates Trade for incoming token with ETH payment (NFT purchase)", () => {
+    const rows = [
+      {
+        "Transaction Hash": "0xnftbuy",
+        "DateTime (UTC)": "2024-12-04 12:00:00",
+        From: "0xseller",
+        To: "0xd8da6bf26964af9d7eed9e03e53415d37aa96045",
+        TokenValue: "1",
+        TokenSymbol: "RAINBOW",
+        TokenName: "Rainbow NFT",
+        ContractAddress: "0xrainbow",
+      },
+    ];
+
+    const nativeTx: ParsedNativeTx = {
+      txHash: "0xnftbuy" as TxHash,
+      dateTime: "2024-12-04 12:00:00",
+      from: toAddress("0xd8da6bf26964af9d7eed9e03e53415d37aa96045"),
+      to: toAddress("0x00000000000000adc04c56bf30ac9d3c0aaf14dc"),
+      valueIn: 0,
+      valueOut: 0.00139,
+      fee: 0.00002,
+      method: "transfer",
+    };
+
+    const nativeByHash = new Map<TxHash, ParsedNativeTx>();
+    nativeByHash.set("0xnftbuy" as TxHash, nativeTx);
+    const processedFeeHashes = new Set<TxHash>();
+    const result = transformTokenRows(rows, config, nativeByHash, processedFeeHashes);
+
+    expect(result.rows).toHaveLength(1);
+    expect(result.rows[0]).toMatchObject({
+      Type: "Trade",
+      BuyAmount: "1",
+      BuyCurrency: "RAINBOW",
+      SellAmount: "0.00139",
+      SellCurrency: "MNT",
+    });
+    expect(result.rows[0]?.Comment).toContain("NFT purchase (trade)");
+  });
+
+  it("keeps Airdrop for mint without ETH payment even with native TX", () => {
+    const rows = [
+      {
+        "Transaction Hash": "0xfreeairdrop",
+        "DateTime (UTC)": "2024-12-04 12:00:00",
+        From: "0x0000000000000000000000000000000000000000",
+        To: "0xd8da6bf26964af9d7eed9e03e53415d37aa96045",
+        TokenValue: "1",
+        TokenSymbol: "FREE",
+        TokenName: "Free NFT",
+        ContractAddress: "0xfree",
+      },
+    ];
+
+    const nativeTx: ParsedNativeTx = {
+      txHash: "0xfreeairdrop" as TxHash,
+      dateTime: "2024-12-04 12:00:00",
+      from: toAddress("0xd8da6bf26964af9d7eed9e03e53415d37aa96045"),
+      to: toAddress("0xfree"),
+      valueIn: 0,
+      valueOut: 0,
+      fee: 0.0001,
+      method: "claim",
+    };
+
+    const nativeByHash = new Map<TxHash, ParsedNativeTx>();
+    nativeByHash.set("0xfreeairdrop" as TxHash, nativeTx);
+    const processedFeeHashes = new Set<TxHash>();
+    const result = transformTokenRows(rows, config, nativeByHash, processedFeeHashes);
+
+    expect(result.rows).toHaveLength(1);
+    expect(result.rows[0]).toMatchObject({
+      Type: "Airdrop",
+      BuyAmount: "1",
+      BuyCurrency: "FREE",
+      SellAmount: "",
+      SellCurrency: "",
+    });
+  });
 });
 
 describe("parseTokenRows", () => {
