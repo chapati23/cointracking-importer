@@ -295,6 +295,119 @@ describe("transformNftTransfer", () => {
     });
   });
 
+  describe("NFT trade pairing (ETH payment)", () => {
+    it("creates Trade for mint with ETH payment", () => {
+      const transfer: ParsedNftTransfer = {
+        txHash: "0xabc123" as TxHash,
+        dateTime: "2024-12-04 11:52:56",
+        from: ZERO_ADDRESS,
+        to: USER_ADDRESS,
+        tokenId: "1234",
+        tokenSymbol: "BAYC",
+        tokenName: "Bored Ape",
+        contractAddress: CONTRACT_ADDRESS,
+        quantity: 1,
+      };
+
+      const nativeTx: ParsedNativeTx = {
+        txHash: "0xabc123" as TxHash,
+        dateTime: "2024-12-04 11:52:56",
+        from: USER_ADDRESS,
+        to: CONTRACT_ADDRESS,
+        valueIn: 0,
+        valueOut: 0.002777,
+        fee: 0.0001,
+        method: "mint",
+      };
+
+      const processedFeeHashes = new Set<TxHash>();
+      const nativeByHash = new Map<TxHash, ParsedNativeTx>();
+      nativeByHash.set("0xabc123" as TxHash, nativeTx);
+
+      const result = transformNftTransfer(transfer, config, processedFeeHashes, nativeByHash);
+
+      expect(result).not.toBeNull();
+      expect(result?.Type).toBe("Trade");
+      expect(result?.BuyAmount).toBe("1");
+      expect(result?.BuyCurrency).toBe("NFT:BAYC#1234");
+      expect(result?.SellAmount).toBe("0.002777");
+      expect(result?.SellCurrency).toBe("MNT");
+      expect(result?.Fee).toBe("0.0001");
+      expect(result?.FeeCurrency).toBe("MNT");
+      expect(result?.Comment).toContain("NFT mint (trade)");
+    });
+
+    it("creates Trade for NFT purchase with ETH payment (non-mint)", () => {
+      const transfer: ParsedNftTransfer = {
+        txHash: "0xdef456" as TxHash,
+        dateTime: "2024-12-04 11:52:56",
+        from: OTHER_ADDRESS,
+        to: USER_ADDRESS,
+        tokenId: "5678",
+        tokenSymbol: "BAYC",
+        tokenName: "Bored Ape",
+        contractAddress: CONTRACT_ADDRESS,
+        quantity: 1,
+      };
+
+      const nativeTx: ParsedNativeTx = {
+        txHash: "0xdef456" as TxHash,
+        dateTime: "2024-12-04 11:52:56",
+        from: USER_ADDRESS,
+        to: OTHER_ADDRESS,
+        valueIn: 0,
+        valueOut: 0.5,
+        fee: 0.0002,
+        method: "transfer",
+      };
+
+      const processedFeeHashes = new Set<TxHash>();
+      const nativeByHash = new Map<TxHash, ParsedNativeTx>();
+      nativeByHash.set("0xdef456" as TxHash, nativeTx);
+
+      const result = transformNftTransfer(transfer, config, processedFeeHashes, nativeByHash);
+
+      expect(result).not.toBeNull();
+      expect(result?.Type).toBe("Trade");
+      expect(result?.SellAmount).toBe("0.5");
+      expect(result?.Comment).toContain("NFT purchase (trade)");
+    });
+
+    it("keeps Airdrop for mint without ETH payment", () => {
+      const transfer: ParsedNftTransfer = {
+        txHash: "0xabc123" as TxHash,
+        dateTime: "2024-12-04 11:52:56",
+        from: ZERO_ADDRESS,
+        to: USER_ADDRESS,
+        tokenId: "1234",
+        tokenSymbol: "BAYC",
+        tokenName: "Bored Ape",
+        contractAddress: CONTRACT_ADDRESS,
+        quantity: 1,
+      };
+
+      const nativeTx: ParsedNativeTx = {
+        txHash: "0xabc123" as TxHash,
+        dateTime: "2024-12-04 11:52:56",
+        from: USER_ADDRESS,
+        to: CONTRACT_ADDRESS,
+        valueIn: 0,
+        valueOut: 0,
+        fee: 0.0001,
+        method: "mint",
+      };
+
+      const processedFeeHashes = new Set<TxHash>();
+      const nativeByHash = new Map<TxHash, ParsedNativeTx>();
+      nativeByHash.set("0xabc123" as TxHash, nativeTx);
+
+      const result = transformNftTransfer(transfer, config, processedFeeHashes, nativeByHash);
+
+      expect(result).not.toBeNull();
+      expect(result?.Type).toBe("Airdrop");
+    });
+  });
+
   describe("sending NFTs", () => {
     it("creates Withdrawal for outgoing NFT", () => {
       const transfer: ParsedNftTransfer = {

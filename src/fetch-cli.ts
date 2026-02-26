@@ -61,6 +61,7 @@ interface FetchOptions {
   chain: string;
   apiUrl?: string;
   nativeSymbol?: string;
+  exchange?: string;
   output?: string;
   verbose?: boolean;
   convert?: boolean;
@@ -162,7 +163,7 @@ async function autoConvert(
   const config = {
     address: toAddress(opts.address),
     nativeSymbol: resolvedNativeSymbol,
-    exchange: opts.chain,
+    exchange: opts.exchange ?? opts.chain,
     verbose: opts.verbose,
   };
 
@@ -236,7 +237,7 @@ async function autoConvert(
       inputFiles: detectedFiles,
       outputPath,
       outputRowCount: allRows.length,
-      testMode: true,
+      testMode: false,
     });
     console.log(`  Import saved to: ${importPath} (test)`);
   }
@@ -261,6 +262,10 @@ async function main(): Promise<void> {
     .option("nativeSymbol", {
       type: "string",
       describe: "Native token symbol (auto-detected for known chains)",
+    })
+    .option("exchange", {
+      type: "string",
+      describe: "Exchange name for CoinTracking output (default: chain name)",
     })
     .option("output", {
       type: "string",
