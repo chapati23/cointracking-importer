@@ -142,13 +142,21 @@ async function fetchAllPages<T>(
 
 function unixToDateTime(timestamp: string): string {
   const date = new Date(Number(timestamp) * 1000);
-  const year = date.getUTCFullYear();
-  const month = String(date.getUTCMonth() + 1).padStart(2, "0");
-  const day = String(date.getUTCDate()).padStart(2, "0");
-  const hours = String(date.getUTCHours()).padStart(2, "0");
-  const minutes = String(date.getUTCMinutes()).padStart(2, "0");
-  const seconds = String(date.getUTCSeconds()).padStart(2, "0");
-  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+  // Format in Europe/Berlin timezone for CoinTracking consistency
+  // Intl.DateTimeFormat handles CET/CEST (DST) automatically
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Europe/Berlin",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  }).formatToParts(date);
+
+  const get = (type: string) => parts.find((p) => p.type === type)?.value ?? "00";
+  return `${get("year")}-${get("month")}-${get("day")} ${get("hour")}:${get("minute")}:${get("second")}`;
 }
 
 // ---------- Value Conversion ----------
@@ -221,7 +229,7 @@ function generateNativeCsv(txs: EtherscanTx[], address: string, nativeSymbol: st
     "Transaction Hash",
     "Blockno",
     "UnixTimestamp",
-    `DateTime (UTC)`,
+    `DateTime (Europe/Berlin)`,
     "From",
     "To",
     "ContractAddress",
@@ -270,7 +278,7 @@ function generateTokenCsv(txs: EtherscanTokenTx[]): string {
     "Transaction Hash",
     "Blockno",
     "UnixTimestamp",
-    "DateTime (UTC)",
+    "DateTime (Europe/Berlin)",
     "From",
     "To",
     "TokenValue",
@@ -308,7 +316,7 @@ function generateInternalCsv(
     "Transaction Hash",
     "Blockno",
     "UnixTimestamp",
-    "DateTime (UTC)",
+    "DateTime (Europe/Berlin)",
     "ParentTxFrom",
     "ParentTxTo",
     "From",
