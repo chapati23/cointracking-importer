@@ -63,9 +63,28 @@ export function transformNftTransfer(
 
   // NFT received
   if (transfer.to === config.address && transfer.from !== config.address) {
-    // From zero address = mint/airdrop
     const isMint = isZeroAddress(transfer.from);
 
+    // If ETH was sent in the same tx, this is a purchase/mint trade
+    if (nativeTx && nativeTx.valueOut > 0) {
+      return {
+        Type: "Trade",
+        BuyAmount: quantity,
+        BuyCurrency: nftCurrency,
+        SellAmount: String(nativeTx.valueOut),
+        SellCurrency: config.nativeSymbol,
+        Fee: feeStr,
+        FeeCurrency: feeCurrency,
+        Exchange: config.exchange,
+        TradeGroup: "",
+        Comment: isMint
+          ? `NFT mint (trade) ${transfer.txHash}`
+          : `NFT purchase (trade) ${transfer.txHash}`,
+        Date: transfer.dateTime,
+      };
+    }
+
+    // Free mint/airdrop or deposit (no ETH payment)
     return {
       Type: isMint ? "Airdrop" : "Deposit",
       BuyAmount: quantity,

@@ -158,6 +158,84 @@ function createWithdrawalRow(
   };
 }
 
+// ---------- Native-Paired Trade (NFT mint/purchase with ETH) ----------
+
+function createNativeTradeRow(
+  incoming: ParsedTokenTransfer,
+  nativeTx: ParsedNativeTx,
+  fee: number,
+  config: ConvertConfig,
+  processedFeeHashes: Set<TxHash>
+): CoinTrackingRow {
+  const applyFee = fee > 0 && !processedFeeHashes.has(incoming.txHash);
+  if (applyFee) {
+    processedFeeHashes.add(incoming.txHash);
+  }
+
+  const isMint = isZeroAddress(incoming.from);
+
+  return {
+    Type: "Trade",
+    BuyAmount: String(incoming.value),
+    BuyCurrency: incoming.symbol,
+    SellAmount: String(nativeTx.valueOut),
+    SellCurrency: config.nativeSymbol,
+    Fee: applyFee ? String(fee) : "",
+    FeeCurrency: applyFee ? config.nativeSymbol : "",
+    Exchange: config.exchange,
+    TradeGroup: "",
+    Comment: isMint
+      ? `NFT mint (trade) ${incoming.txHash}`
+      : `NFT purchase (trade) ${incoming.txHash}`,
+    Date: incoming.dateTime,
+  };
+}
+
+// ---------- Per-Hash Processing ----------
+
+function processTransferGroup(
+  classified: ClassifiedTransfers,
+  nativeTx: ParsedNativeTx | undefined,
+  config: ConvertConfig,
+  processedFeeHashes: Set<TxHash>
+): CoinTrackingRow[] {
+  const fee = nativeTx?.fee ?? 0;
+
+  // Simple 1:1 swap
+  if (isSimpleSwap(classified)) {
+    const outgoing = classified.outgoing[0];
+    const incoming = classified.incoming[0];
+    if (outgoing && incoming) {
+      return [createSwapRow(outgoing, incoming, fee, config, processedFeeHashes)];
+    }
+  }
+
+  // Multi-token swap: treat as single trade (first out → last in)
+  const firstOutgoing = classified.outgoing[0];
+  const lastIncoming = classified.incoming.at(-1);
+  if (firstOutgoing && lastIncoming) {
+    return [createSwapRow(firstOutgoing, lastIncoming, fee, config, processedFeeHashes)];
+  }
+
+  const rows: CoinTrackingRow[] = [];
+
+  // Individual deposits — check for NFT trade (ETH payment in same tx)
+  for (const transfer of classified.incoming) {
+    if (nativeTx && nativeTx.valueOut > 0) {
+      rows.push(createNativeTradeRow(transfer, nativeTx, fee, config, processedFeeHashes));
+    } else {
+      rows.push(createDepositRow(transfer, fee, config, processedFeeHashes));
+    }
+  }
+
+  // Individual withdrawals
+  for (const transfer of classified.outgoing) {
+    rows.push(createWithdrawalRow(transfer, fee, config, processedFeeHashes));
+  }
+
+  return rows;
+}
+
 // ---------- Main Transform Function ----------
 
 export function transformTokenRows(
@@ -173,41 +251,9 @@ export function transformTokenRows(
 
   for (const [txHash, txTransfers] of grouped) {
     processedHashes.add(txHash);
-
     const classified = classifyTransfers(txTransfers, config.address);
     const nativeTx = nativeByHash.get(txHash);
-    const fee = nativeTx?.fee ?? 0;
-
-    // Simple 1:1 swap
-    if (isSimpleSwap(classified)) {
-      const outgoing = classified.outgoing[0];
-      const incoming = classified.incoming[0];
-      if (outgoing && incoming) {
-        const swapRow = createSwapRow(outgoing, incoming, fee, config, processedFeeHashes);
-        result.push(swapRow);
-      }
-      continue;
-    }
-
-    // Multi-token swap: treat as single trade (first out → last in)
-    const firstOutgoing = classified.outgoing[0];
-    const lastIncoming = classified.incoming.at(-1);
-    if (firstOutgoing && lastIncoming) {
-      // Use first outgoing and last incoming for the trade
-      const swapRow = createSwapRow(firstOutgoing, lastIncoming, fee, config, processedFeeHashes);
-      result.push(swapRow);
-      continue;
-    }
-
-    // Individual deposits
-    for (const transfer of classified.incoming) {
-      result.push(createDepositRow(transfer, fee, config, processedFeeHashes));
-    }
-
-    // Individual withdrawals
-    for (const transfer of classified.outgoing) {
-      result.push(createWithdrawalRow(transfer, fee, config, processedFeeHashes));
-    }
+    result.push(...processTransferGroup(classified, nativeTx, config, processedFeeHashes));
   }
 
   return { rows: result, processedHashes };
