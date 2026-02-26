@@ -457,7 +457,7 @@ describe("transformNativeTx - edge cases", () => {
     expect(result?.Comment).toBe("swap 0xabc");
   });
 
-  it("returns null when user is both sender and receiver with only valueIn", () => {
+  it("creates Deposit for bridge self-transfer (from === to === address)", () => {
     const tx: ParsedNativeTx = {
       txHash: "0xabc" as TxHash,
       dateTime: "2024-12-04",
@@ -472,8 +472,20 @@ describe("transformNativeTx - edge cases", () => {
     const processedFeeHashes = new Set<TxHash>();
     const result = transformNativeTx(tx, config, processedFeeHashes);
 
-    // Should not create Deposit because from === config.address
-    expect(result).toBeNull();
+    // Self-transfers are bridge deposits (e.g. L1→L2 OP Stack)
+    expect(result).toEqual({
+      Type: "Deposit",
+      BuyAmount: "100",
+      BuyCurrency: "MNT",
+      SellAmount: "",
+      SellCurrency: "",
+      Fee: "0.001",
+      FeeCurrency: "MNT",
+      Exchange: "Mantle",
+      TradeGroup: "",
+      Comment: "Bridge deposit 0xabc",
+      Date: "2024-12-04",
+    });
   });
 
   it("creates Withdrawal when user is both sender and receiver with valueOut", () => {

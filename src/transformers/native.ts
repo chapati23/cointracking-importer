@@ -58,6 +58,23 @@ export function transformNativeTx(
   const feeStr = applyFee ? String(tx.fee) : "";
   const feeCurrency = applyFee ? config.nativeSymbol : "";
 
+  // Bridge deposit (self-transfer: from === to === address, e.g. L1→L2 OP Stack deposit)
+  if (tx.valueIn > 0 && tx.from === config.address && tx.to === config.address) {
+    return {
+      Type: "Deposit",
+      BuyAmount: String(tx.valueIn),
+      BuyCurrency: config.nativeSymbol,
+      SellAmount: "",
+      SellCurrency: "",
+      Fee: feeStr,
+      FeeCurrency: feeCurrency,
+      Exchange: config.exchange,
+      TradeGroup: "",
+      Comment: `Bridge deposit ${tx.txHash}`,
+      Date: tx.dateTime,
+    };
+  }
+
   // Incoming native transfer (deposit)
   if (tx.valueIn > 0 && tx.to === config.address && tx.from !== config.address) {
     return {
