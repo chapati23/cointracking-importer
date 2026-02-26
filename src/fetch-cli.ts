@@ -209,7 +209,7 @@ async function autoConvert(
   // Determine output path
   const addressShort = `${opts.address.slice(0, 6)}...${opts.address.slice(-4)}`;
   const chainLower = opts.chain.toLowerCase();
-  const outputDir = path.join("data", "test-imports", chainLower, addressShort);
+  const outputDir = path.join("data", chainLower, addressShort);
   fs.mkdirSync(path.join(outputDir, "output"), { recursive: true });
   const outputPath = path.join(outputDir, "output", "cointracking.csv");
 
