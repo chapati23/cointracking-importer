@@ -29,6 +29,7 @@ export const COINTRACKING_NATIVE_SYMBOLS: Record<string, string> = {
   // Chains not natively supported by Cointracking (user-verified symbols)
   Mantle: "MNT3",
   Dymension: "DYM",
+  Zora: "ETH",
 };
 
 // ---------- Built-in Cointracking Token Symbols ----------
