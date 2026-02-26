@@ -19,6 +19,7 @@
     "lint": "trunk check --fix",
     "typecheck": "tsc --noEmit",
     "knip": "knip",
+    "fetch": "tsx src/fetch-cli.ts",
     "clean:test-imports": "rm -rf data/test-imports"
   },
   "dependencies": {
