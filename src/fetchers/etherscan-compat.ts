@@ -172,6 +172,8 @@ function weiToEther(wei: string): string {
 }
 
 function tokenValueToDecimal(value: string, decimals: string): string {
+  // ERC-721 NFTs have no value field — quantity is always 1
+  if (!value && (!decimals || decimals === "0" || decimals === "")) return "1";
   if (!value || value === "0") return "0";
 
   const dec = Number(decimals) || 18;
@@ -395,13 +397,32 @@ export async function fetchAndGenerateCsvs(config: FetcherConfig): Promise<Fetch
     if (verbose) console.log(`  Wrote ${nativeTxs.length} native txs to ${filePath}`);
   }
 
-  // Fetch token transfers
-  if (verbose) console.log("Fetching token transfers...");
-  const tokenTxs = await fetchAllPages<EtherscanTokenTx>(
+  // Fetch ERC-20 token transfers
+  if (verbose) console.log("Fetching ERC-20 token transfers...");
+  const erc20Txs = await fetchAllPages<EtherscanTokenTx>(
     apiBaseUrl,
     { ...baseParams, action: "tokentx" },
     verbose
   );
+
+  // Fetch ERC-721 (NFT) token transfers
+  if (verbose) console.log("Fetching ERC-721 (NFT) token transfers...");
+  const nftTxs = await fetchAllPages<EtherscanTokenTx>(
+    apiBaseUrl,
+    { ...baseParams, action: "tokennfttx" },
+    verbose
+  );
+
+  // Fetch ERC-1155 token transfers
+  if (verbose) console.log("Fetching ERC-1155 token transfers...");
+  const erc1155Txs = await fetchAllPages<EtherscanTokenTx>(
+    apiBaseUrl,
+    { ...baseParams, action: "token1155tx" },
+    verbose
+  );
+
+  // Merge all token transfers
+  const tokenTxs = [...erc20Txs, ...nftTxs, ...erc1155Txs];
   result.tokenTxCount = tokenTxs.length;
 
   if (tokenTxs.length > 0) {
